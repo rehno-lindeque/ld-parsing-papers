@@ -1,0 +1,162 @@
+
+\documentclass[11pt]{article}
+\usepackage{geometry}
+\geometry{a4paper}
+%\usepackage{gcl}
+%\usepackage{pfs}
+%\usepackage{algorithmic}
+%\usepackage{graphicx}
+%\usepackage{epstopdf}
+%\usepackage{natbib}
+%\usepackage{fancyvrb}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{proof}
+
+%\setlength{\topsep}{2mm}
+%\setlength{\parindent}{15pt}
+
+%\newlength{\OBLS}\setlength{\OBLS}{\baselineskip}
+%\newlength{\OPAR}\setlength{\OPAR}{\parindent}
+%\newcommand{\pgskip}{\hspace{\mathindent}\=\+}
+%\newcommand{\FOR}[1]{\FRM{\,#1\,}}
+%\newcommand{\FRM}[1]{\mbox{$#1$}}
+%\newcommand{\DERIVE}
+%  {\setlength{\baselineskip}{1.3\baselineskip}
+%  \begin{tabbing}
+%  \hspace{\OPAR}\=\hspace{\OPAR}\=\hspace{\OPAR}\=\hspace{\OPAR}\=\hspace{\OPAR}\=\hspace{\OPAR}\=\kill
+%  }
+%\newcommand{\form}[1]
+%  {\>\>\FOR{#1}}
+%\newcommand{\hint}[2]
+%  {\\*\>\FRM{#1}\>\>\{#2\}\\}
+%\newcommand{\STARTPROOF}[1]
+%  {\TOPROVE{#1}\\$\vartriangleright$ \>\>}
+%\newcommand{\TOPROVE}[1]
+%  {#1}
+%\newcommand{\ENDDERIVE}
+%  {\end{tabbing}\setlength{\baselineskip}{\OBLS}
+%}
+%\newcommand{\ENDPROOF}
+%  {$\rbrack\arrowvert$\\
+%  $\square$\\\\}
+%\newcommand {\IND}
+%  {\setlength{\parindent}{\OPAR}\\
+%  \begin{indent}}
+%\newcommand {\ENDIND}
+%  {\end{indent}\\
+%  \setlength{\parindent}{0 pt}\\}
+%\newcommand {\IF}
+%  {\mathbf{if} \:\:}
+%\newcommand {\BAR}
+%  {\ [\!] \:\:\:}
+%\newcommand {\FI}
+%  {\mathbf{fi} \:\:}
+%\newcommand {\ARROW}
+%  {\rightarrow}
+%\newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
+%\newcommand{\TT} {\textit{true}}
+%\newcommand{\FF} {\textit{false}}
+
+%%%%%%%%%%%%%%%%%%%%%Stuff from SICL article%%%%%%
+%\newcommand{\sos}[1]{\mathcal{#1}}
+%\newcommand{\sset}[1]{\texttt{#1}}
+%\newcommand{\restr}[2]{#1\restriction#2}
+
+%\def\universe{A}
+%\def\Empty{\mbox{\O}}
+
+\begin{document}
+
+\title{A case for the use of delayed reductions in left-to-right parsing of context-free grammars}
+\author{Rehno Lindeque
+\\23123576}
+
+\maketitle
+
+\section*{Abstract}
+In this paper we suggest the use of delayed actions in generalized parsing of context-free grammars. 
+Our contention is that delayed reductions in a left-to-right parser can be used to implement more efficient parsers for unambiguous context-free grammars. 
+This work is therefore intended as preparatory material for further research into this area. 
+To this end we develop a few tools for studying and developing the semantics of delayed parsing actions.
+A small instruction set is shown which includes a "delayed reduce" instruction that may be used to resolve rules containing cycles in their lookahead sets.
+Operational semantics for each of these instructions are described and the implementation of an interpreter for the instructions is demonstrated.
+Finally we present a prototype construction algorithm capable of generating parsers for a limited subset of unambiguous grammars using this instruction set.\\
+
+\textbf{Keywords:} parser, LD parsing, context-free grammar, generalized parsing, GLR parsing, LR parsing, LL parsing
+
+\section{Introduction}
+
+\subsection{Top-down vs Bottom-up parsing}
+
+\subsection{Generalized parsing approaches}
+
+\section{Delayed reductions}
+
+\subsection{Basic strategy}
+Our basic strategy for parsing grammars proceeds in two passes.
+The first is a recognition pass where the sequence of reduction rules are recorded into a temporary buffer that grows in a stack-like manner and supports constant-time random-access.
+In the second pass the sequence of recognized rules are applied consecutively in order to build the final parse tree in a manner similar to LR parser, but without any recognition steps or lookahead.
+By separating these two steps into distinct passes, the recognition pass is allowed the convenience of identifying rules in a more flexible sequence.\\
+
+The mechanism used to reorder rules in this paper is placeholder tokens representing delayed reductions.
+Whenever a rule must be reduced that cannot be fully determined, a placeholder token is recorded in the buffer in its place. 
+Once the reduction rule can be resolved the placeholder token is replaced with this rule number.
+In order to keep track of placeholders we also record their indexes in a separate stack, allowing the parser to return to these tokens later on in order to replace them using random-access writes.\\
+
+In effect placeholders are used in order delay reductions until some unspecified lookahead has been recognized.
+Clearly the order of rule recognition is relaxed using this mechanism, however it is not completely unrestricted. 
+The following conditions specify certain constraints by which the algorithm must abide.
+
+\begin{itemize}
+\item As rules are recognized they are placed in the buffer in a left-to-right order. This corresponds with a bottom-up parsing strategy since productions that are closer to the leaf nodes in the parse tree will normally be recognized before their parent rules are recognized.
+\item Delayed rules may only be resolved in a right-to-left order, corresponding with the top-down strategy of parsing since delayed rules near the root of the tree must be resolved before 
+rules near the leaf nodes can be resolved. 
+It is worth noting however that, although the unresolved rules will only be resolved in a right-to-left order, rules may be added to the unresolved stack at any time which intuitively
+causes the right-to-left rule resolution loop to be nested inside the main left-to-right recognition loop.
+\end{itemize}
+
+In order to explain this strategy in more formal terms we will define an instruction set and interpreter which in essence forms a tiny domain specific language for parsing with delayed actions.
+For the sake of simplicity we begin by describing a simple modified LR(0) algorithm. This LR(0) algorithm has three basic operations: shift, reduce and pivot. 
+The shift and pivot operation is responsible for recognizing terminal tokens on the input stream whereas the reduce action is responsible for translating strings of terminal tokens into nonterminal tokens.
+
+We begin
+
+
+
+[todo: image]
+
+This delay mechanism is the on which we base our algorithm.
+
+
+ whereas the second pass is responsible for constructing a parse tree using the output from the first.
+
+The operational semantics of these three operations can be given as follows:
+
+
+
+\[
+\infer{i \mapsto i+1}{LexToken_i = a & action = shift(a)}
+\]
+
+
+We will begin by describing a slightly modified version of a simple LR(0) algorithm using the given instruction set.
+
+
+\section{Implementation}
+\subsection{Parser construction}
+\subsection{Parser interpreter}
+
+\section*{Results}
+
+\section*{Conclusions}
+
+\section*{Future work}
+
+Combining the recognition and builder passes.
+The cost of Armotized parallelization.
+
+\end{document}
+
