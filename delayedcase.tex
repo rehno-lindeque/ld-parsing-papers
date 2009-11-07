@@ -13,11 +13,12 @@
 %\usepackage{fancyvrb}
 \usepackage{float}
 \usepackage{wrapfig}
+\usepackage{proof}
 
+%\usepackage{stmaryrd}
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{amsmath}
-\usepackage{proof}
 
 %%%%%%%%%%%%%%%%%%%% MACROS %%%%%%%%%%%%%%%%%%%%
 % Grammars
@@ -103,19 +104,20 @@
 
 \title{A case for the use of delayed reductions in left-to-right parsing of context-free grammars}
 \author{Rehno Lindeque
-\\23123576}
+\\23123576
+\\Supervisors: Derrick Kourie, Bruce Watson}
 
 \maketitle
 
 \begin{abstract}
 In this paper we suggest the use of delayed actions for generalized parsing of unambiguous context-free grammars. 
-Our contention is that delayed reductions in a left-to-right parser might result in more efficient parsers than existing techniques 
-and describes the nature of the parsing process in a more light-weight, intuitive manner.
+Our conftention is that delayed reductions in a left-to-right parser describes the nature of the parsing process in a more light-weight, intuitive manner than existing techniques.
+It is also hoped that this might lead to simpler, more efficient parsers without sacrificing the generality of our grammars.
 This work is therefore intended as preparatory material for further research in this area.
 To this end we develop a set of tools for studying and developing the semantics of delayed parsing actions.
-A small pseudo instruction set is shown which includes delayed parsing actions used to resolve rules containing cycles in their lookahead sets.
-Operational semantics for each of these instructions are described and the implementation of an interpreter for the instruction set is demonstrated.
-In addition a prototype construction algorithm is presented capable of generating parsers for a limited subset of unambiguous grammars.
+A small pseudo instruction set is shown which includes delayed actions used to resolve rules containing cycles in their lookahead sets.
+Operational semantics for each of these instructions are provided and the implementation of an interpreter for the instruction set is demonstrated.
+In addition a prototype construction algorithm is presented, capable of generating parsers for a limited subset of unambiguous grammars.
 Finally we discuss the remaining problems with this technique and possible approaches to resolving them in future work.\\
 \end{abstract}
 
@@ -124,12 +126,17 @@ Finally we discuss the remaining problems with this technique and possible appro
 \section{Introduction}
 
 \subsection{Top-down vs Bottom-up parsing}
+
+Two well known strategies exist in which most parsing algorithm can be categorized.
+
 \emph{(TODO)\\ %BUSY HERE
 LL parsing\\
 LR parsing \cite{knuth65}\\
 Recursive ascent parsers \cite{13326, 47909, 770849} }
 
 \subsection{Generalized parsing approaches}
+
+... the parser must \emph{look ahead} into the input stream in order to derive the correct rule to reduce.
 
 \emph{(TODO)\\ %BUSY HERE
 Motivation: Translation versus recognition (why k $>$ 1 lookahead is needed) \cite{Parr95lland}\\
@@ -138,32 +145,60 @@ Chart parsers: Earley $\rightarrow$ GLR \\
 Right Nulled GLR Parsers \cite{1146810}\\
 Performance of GLR Parser \cite{Mcpeak04elkhound:a}\\ %(Same asymptotic performance, but slower by about a factor of 10x according to \cite{Mcpeak04elkhound:a} due to complicated data structures (Stack Structured Graph)
 %(todo: find a better reference?))\\
-Previous work on delayed reductions (similar ideas, but rather different algorithms) \cite{1287949, Marc80, 991520, 146993}
+Previous work on delayed reductions (similar ideas, but rather different algorithms) \cite{1287949, Marc80, 991520, 146993}\\
+Parsing with continuations
 }
+
+
+\subsection{Overview}
+\emph{(TODO: Expand + look at phrasing)}
+This remainder of this paper will be structured as follows. 
+We begin by describing the basic ideology behind using delayed parsing actions along with some basic examples of their utility.
+Next, the theoretical aspects of the parser is explored along with formal definitions and proofs.
+
+
+
+
 
 \section{Delayed reductions}
 
 \subsection{Basic strategy}
-Our basic strategy for parsing grammars proceeds in two passes.
-The first is a recognition pass where the sequence of reduction rules are recorded into a temporary buffer that grows in a stack-like manner and supports constant-time random-access.
-In the second pass the sequence of recognized rules are applied consecutively in order to build the final parse tree in a manner similar to LR parser, but without any recognition steps or lookahead.
-By separating these two steps into distinct passes, the recognition pass is allowed the convenience of identifying rules in a more flexible sequence.\\
 
-The mechanism used to reorder rules in this paper is placeholder tokens representing delayed reductions.
-Whenever a rule must be reduced that cannot be fully determined, a placeholder token is recorded in the buffer in its place. 
-Once the reduction rule can be resolved the placeholder token is replaced with this rule number.
-In order to keep track of placeholders we also record their indexes in a separate stack, allowing the parser to return to these tokens later on in order to replace them using random-access writes.\\
+There are three aspects of the parsing process that we are interested in and we will refer to each aspect by the following names.
+\begin{itemize}
+\item Recognition---The ability of a parser to recognize various sequences of tokens according to some grammar without providing any output other than an assertion of the correctness of the syntax of its input and possibly an indication of where an error might be located in the source.
+\item Translation---In the context of parsing translation refers to the process of converting the source program from its original representation to the final output of the parser. The output of the parser is usually in the form of a \emph{concrete syntax tree} also commonly referred to as a \emph{parse tree}.
+\item Construction---The construction of a parser is handled by a separate algorithm responsible for automatically generating executable parsing code from the static grammar definition supplied by the user.
+\end{itemize}
 
-In effect placeholders are used in order delay reductions until some unspecified lookahead has been recognized.
-Clearly the order of rule recognition is relaxed using this mechanism, however it is not completely unrestricted. 
-The following conditions specify certain constraints by which the algorithm must abide.
+\emph{TODO: Grammar definitions. Production, rule etc)}\\
+\emph{TODO: Perhaps redefine "production rule", or at least specify what it means to "recognize a production rule"}\\
+
+Our basic strategy for parsing text proceeds in two passes.
+The first is a \emph{recognition pass} with the additional constraint that production rules are recorded, corresponding to recognized sequences of lexical tokens. The rule tokens are placed into a temporary buffer---the \emph{rules buffer}---that grows in a stack-like manner, but also supports constant-time random-access operations.
+In the second pass---the \emph{translation pass}---the sequence of recognized production rules are used to build the final parse tree in a similar a manner to an LR parser, but without any recognition steps or lookahead.\\
+
+By separating these two aspects into distinct passes, the recognition pass is allowed the convenience of identifying the right hand sides of production rules in a more flexible order. 
+However, the translation pass requires the rules buffer it is given to be correctly ordered in order to build the parse tree.
+For this purpose, the mechanism used to reorder rules relies on placeholder tokens in the rules buffer representing unresolved production rules.
+Whenever the parser must deduce a rule that cannot be fully determined, a placeholder token is appended to the rules buffer in its place. 
+Once the rule can be resolved, the placeholder token is replaced with the correct rule number. 
+In order to keep track of placeholders we also record their indexes in a separate stack, allowing the parser to return to these tokens later on and replace them using random-access writes.
+
+
+Due to placeholder representing We will also refer to placeholder tokens as 'delayed rules'...\\
+
+
+In effect, placeholders are used in order to delay reductions until some unspecified lookahead has been recognized.
+Clearly the order of rule recognition is relaxed using this mechanism. However, it is not completely unrestricted. 
+The following conditions specify certain constraints by which the recognition pass must abide.
 
 \begin{itemize}
-\item As rules are recognized they are placed in the buffer in a left-to-right order. This corresponds with a bottom-up parsing strategy since productions that are closer to the leaf nodes in the parse tree will normally be recognized before their parent rules are recognized.
+\item As rules are recognized they are placed in the rules buffer in a left-to-right order. This corresponds with a bottom-up parsing strategy since production rules that are closer to the leaf nodes in the parse tree will normally be recognized before their parent rules are recognized.
 \item Delayed rules may only be resolved in a right-to-left order, corresponding with the top-down strategy of parsing since delayed rules near the root of the tree must be resolved before 
 rules near the leaf nodes can be resolved. 
 It is worth noting however that, although the unresolved rules will only be resolved in a right-to-left order, rules may be added to the unresolved stack at any time which intuitively
-causes the right-to-left rule resolution loop to be nested inside the main left-to-right recognition loop.
+allows the right-to-left rule resolution loop to be nested inside the main left-to-right recognition loop.
 \end{itemize}
 
 In order to explain this strategy in more formal terms we will define an instruction set and interpreter which in essence forms a tiny domain specific language for parsing with delayed actions.
@@ -171,27 +206,30 @@ For the sake of simplicity we begin by describing a simple modified LR(0) algori
 The shift and switch operations are responsible for recognizing terminal tokens on the input stream whereas the reduce action is responsible for translating strings of terminal tokens into nonterminal tokens.
 
 An interpreter can be built to correctly execute these instructions. 
-Using this approach we can demonstrate the operation of a parser constructed using this set of actions.
+Using this approach we demonstrate the operation of a parser constructed using this set of actions.
 The following free variables will be used to represent the state of the parser interpreter during execution:
 
 \begin{itemize}
 \item $input_{[0, input.length)}$ is an array of input tokens of length $input.length$ returned by a lexer.
 \item $i$ is an index into the array of input tokens representing the current position of the parser in the stream during the recognition pass such that $input_i$ is the token currently being tested.
 This index will never be decreased and need only increase in increments of 1.
-\item $actions_{[0, actions.length)}$ is a sequence of instructions representing the encoded parser similar to the source code that is output by known parser generators. 
-This array is automatically generated by a separate parser construction algorithm which will be discussed later.
-\item $j$ is an index into the array of actions such that $actions_j$ defines the current instruction being decoded.
-\item $outputrules$ is dynamically growing array storing the output of recognition pass
+\item $actions_{[0, actions.length)}$ is a sequence of instructions representing the encoded parser similar to the source code that is output by parser generators. 
+This array is automatically generated by a separate parser construction algorithm.
+\item $j$ is an index into the array of actions such that $actions_j$ refers to the current instruction being decoded.
+\item $outputrules$ is a dynamically growing array storing the output of recognition pass.
+\item $k$ is an index into the array of output rules such that $k$ always points to the first unfilled element of the array.
+\item $callstack$ is a dynamically growing stack for storing the current index of the parser in the instruction table in order to return to it later.
+\item $l$ is an index into the call stack such that $l$ always points to the first unfilled element of the stack.
+%\item $continuations$ is a stack for storing the current index of the parser in the instruction table in order to return to it later.
 \item $error$ is a special error state which (in the absence of error recovery) will halt the parser and report a syntax error.
 \end{itemize}
 
-Every action in the array will be represented in this format:\\
-\texttt{ action ( [parameters\textellipsis] )}\\
+Every action in the array will be represented using the format\\ \texttt{ action [( [parameters\textellipsis] )]}\\
 
 Operational semantics for the following operations is discussed below, followed by the implementation of a basic LR(0) parser.
 \begin{itemize}
 \item \texttt{shift(terminaltoken)}
-\item \texttt{switch([terminaltoken $\mapsto$ target, \textellipsis])}
+\item \texttt{switch(terminaltoken $\mapsto$ state, \textellipsis)}
 \item \texttt{reduce(rule)}
 \end{itemize}
 
@@ -209,40 +247,41 @@ There are only two options: Either the token matches the parameter given to the 
 \end{equation}\\
 
 \subsubsection{The `switch' action}
-\texttt{switch([terminaltoken $\Mapsto$ target, \textellipsis])}\\
+\texttt{switch(terminaltoken $\mapsto$ state, \textellipsis)}\\
 The switch action is used to recognize input tokens nondeterministicly.
-The set of parameters given to the switch action can be viewed as an associative map of key-value pairs where a terminal token maps to a parse state or an index into the generated parser code.
-If a terminal token on the input stream is contained in the map then the switch action will cause the parser to jump to the new state similar to how switch- or case statements behave in many programming languages.
-However, if the input terminal is not recognized by the switch action, then the parser is placed in the $error$ state.
+The set of parameters given to the switch action can be viewed as an associative map of key-value pairs where a terminal token maps to a parse state or, in other words, an index into the generated parser code.
+If a terminal token on the input stream is contained in the map then the switch action will cause the parser to jump to the new state similar to how switch statements behave in many programming languages.
+If the input terminal is not recognized by the switch action, then the parser is placed in the $error$ state. 
+In the definition below the function $getvalue$ returns the state index value corresponding to the terminal token given as the key.
 
 \begin{equation}
-\infer{i, j \mapsto i+1, gettarget(A, input_i)}{input_i \in A & actions_j = switch(A)} \tag{Def 1.3}
+\infer{i, j \mapsto i+1, getvalue(A, input_i)}{input_i \in A & actions_j = switch(A)} \tag{Def 1.3}
 \end{equation}
 
 \begin{equation}
-\infer{error}{input_i \notin A & actions_j = switch(A)} \tag{Def 1.4}
+\infer{parsestate \mapsto error}{input_i \notin A & actions_j = switch(A)} \tag{Def 1.4}
 \end{equation}\\
 
 There is an apparent redundancy between the switch and the shift actions. 
-We can see that a shift action of the form $shift(a)$ will behave similar to a switch action of the form $switch([a \Rightarrow i+1])$ where i+1 indicates the index of the next action to perform.
-However the distinction is made between these two actions as a matter of convenience: 
-Switch actions are viewed as the central recognition mechanism of the parser, because they involve a non-trivial choice.
+A shift action of the form $shift(a)$ will behave similar to a switch action in the form $switch([a \mapsto next])$ where $next$ indicates the index of the instruction that directly follows the switch.
+However, a distinction is made between these two actions as a matter of convenience: 
+We view switch actions as the primary recognition mechanism of the parser, because they involve a non-trivial choice.
 By contrast, shift actions do not make any significant contribution to the internal state of the parser other than to catch syntax errors.
-
+	
 \subsubsection{The `reduce' action}
 \texttt{reduce(rule)}\\
 The parameter given to the reduce action is an index into a list of all rules in the given grammar where every rule is in the form \texttt{nonterminaltoken $\rightarrow$ terminaltoken \textellipsis}. 
 A production in a grammar may be reduced from any number of different sequences of terminal tokens, however a rule recognizes only one possible sequence of terminal tokens.
 In other words, given some rule both the left and right side of the reduction can be determined (although identifiers must still be stored).
-For this reason we use rule numbers internally rather than using productions directly.
+For this reason we use rule numbers internally rather than using grammar productions directly.
 
 \begin{equation}
-\infer{j, outputrules_k, k \mapsto j+1, r, k+1}{input_i \in A & actions_j = reduce(r)} \tag{Def 1.5}
+\infer{j, outputrules_k, k \mapsto j+1, r, k+1}{actions_j = reduce(r)} \tag{Def 1.5}
 \end{equation}\\
 
 \subsubsection{Basic LR(0) parsing}
 
-Since LR(0) grammars requires no look ahead they can be parsed directly using only recognition and reduction actions.
+Since LR(0) grammars requires no lookahead they can be parsed directly using only recognition and reduction actions.
 To see how these rules translate into a familiar language we construct an LR(0) parser for a simple grammar in the guarded command language (GCL) in a similar style to a recursive-ascent parser.
 
 This simple grammar will be used for illustration, with $S$ representing the starting token.
@@ -255,9 +294,9 @@ G \equiv \quad & A_1 \rightarrow a\\
                & S_3 \rightarrow x y \$
 \end{align*}
 
-The parsing steps to recognize this grammar is:
-1. The first token to be recognized must be $x$. Since the choice of $x$ is predetermined a shift action, $shift(x)$ may be used which also checks for an error in the input stream.
-
+In order to recognize this grammar we will derive the following sequence of parsing steps:
+\begin{enumerate}
+\item The first token to be recognized must be $x$. Since the choice of $x$ is predetermined a shift action, $shift(x)$, may be used which also checks for an error in the input stream.
 %\begin{figure}[htbp]
 \begin{center}
 \begin{gcl}
@@ -268,10 +307,9 @@ The parsing steps to recognize this grammar is:
 \end{center}
 %\end{figure}
 
-2. Now, the set of valid tokens to follow are $\{ a, b, y \}$. 
-Since this recognition involves a choice of $a$, $b$ or $y$ a logical branch occurs in the parser, indicating that a switch action must be employed.
-The choice of branch will place the parser into one of three distinct states, hence it makes sense to indicate this by constructing a separate procedure for each.
-
+\item Now the set of valid tokens to follow are $\{ a, b, y \}$. 
+Since this recognition involves a choice of $a$, $b$ or $y$ a logical branch occurs in the parser, indicating that a $switch$ action must be employed.
+The choice of branch will place the parser into one of three distinct states. Hence it makes sense to indicate this by constructing a separate procedure for each.
 %\begin{figure}[htbp]
 \begin{center}
 \begin{gcl}
@@ -291,10 +329,9 @@ The choice of branch will place the parser into one of three distinct states, he
 \end{center}
 %\end{figure}
 
-3. For each branch of the switch the remaining actions are fully deterministic. 
-The first two branches must output their corresponding reduction rules $A_1$ and $B_1$. 
-For example reduction rule $A_1$ may be performed as follows:
-
+\item For each branch of the switch the remaining parsing actions are fully deterministic as no more choices remain.
+The first two branches must output their corresponding reduction rules $A_1$ or $B_1$. 
+For example, the reduction $reduce(A_1)$ may be performed as follows:
 %\begin{figure}[htbp]
 \begin{center}
 \begin{gcl}
@@ -304,13 +341,13 @@ k \becomes k + 1;
 \end{center}
 %\end{figure}
 
-Now all that remains in each branch is to recognize the remaining `end-of-stream' token $\$$ and then output $S_1$, $S_2$ or $S_3$. 
+\item Now all that remains in each branch is to recognize the remaining `end-of-stream' token $\$$ and then output $S_1$, $S_2$ or $S_3$. 
 The complete pseudo code that describes this process is listed below.
 
 \begin{center}
 \begin{gcl}
 \PROC ParseS1(input)
-outputrules_k \becomes A;
+outputrules_k \becomes A_1;
 k \becomes k + 1;
 \IF input_i = \$ \rightarrow 
                  \qquad i \becomes i + 1;
@@ -327,7 +364,7 @@ k \becomes k + 1;
 \begin{center}
 \begin{gcl}
 \PROC ParseS2(input)
-outputrules_k \becomes B;
+outputrules_k \becomes B_1;
 k \becomes k + 1;
 \IF input_i = \$ \rightarrow i \becomes i + 1;
 \BAR input_i \neq \$ \rightarrow
@@ -354,7 +391,8 @@ k \becomes k + 1;
 \end{gcl}
 \end{center}
 
-\begin{figure}[!h]
+\clearpage
+\begin{figure}[!ht]
 \begin{center}
 \begin{gcl}
 \PROC ParseG(input, output, parserstate)
@@ -383,58 +421,75 @@ i \becomes 0;
 \end{center}
 \end{figure}
 
+\end{enumerate}
 
 \subsection{Delayed actions}
-While the four operations discussed provide the necessary tools to recognize any LR(0) grammar, they do not provide any manner of looking ahead into the input stream.
-Suppose that we add two more operations, \texttt{delay()} and \texttt{resolve(rule)} to our instruction set with the following semantics:\\
+While the three operations discussed provide the necessary tools to recognize any non-recursive LR(0) grammar, they do not provide any manner of looking ahead into the input stream. Furthermore parsers using these instruction will exhibit exponential growth if no explicit `return' action is available.
+Some additional actions are provided to resolve these issues:
+\begin{itemize}
+\item \texttt{delay}
+\item \texttt{resolve(rule)}
+\item \texttt{return}
+\item In addition the \texttt{switch} action is slightly modified to use the callstack.
+\end{itemize}
 
 \subsubsection{The `delay' action}
-\texttt{delay()}\\
+\texttt{delay}\\
 The delay action adds a placeholder token called $ignore$ to the output rules which may be replaced later.
 In addition the index of the placeholder is pushed onto the stack of delays.
 Note that the value of $ignore$ should be reserved so that it will not conflict with any rule number.
 \begin{equation}
-\infer{delays_l, l, j, outputrules_k, k \mapsto j, l+1, j+1, ignore, k+1}{actions_j = delay()} \tag{Def 1.6}
+\infer{delays_l, l, j, outputrules_k, k \mapsto j, l+1, j+1, ignore, k+1}{actions_j = delay} \tag{Def 1.6}
 \end{equation}\\
 
 \subsubsection{The `resolve' action}
 \texttt{resolve(rule)}\\
 The resolve action is similar to the reduce action, but instead of immediately pushing a reduction rule onto the output stack it instead replaces the placeholder token previously pushed by a delay action.
-It may also push the special token $ignore$, meaning that the output rules should stay unchanged and no reduction is necessary. 
-Since the index of this placeholder has been popped from the stack, this delay will not be re-evaluated again.
+It may also push the special token $ignore$ meaning that the output rules should remain unchanged and no reduction is necessary. 
+Since the resolve action will pop the index of this placeholder token from the stack, this delay would not be re-evaluated again.
 \begin{equation}
 \infer{l, j, outputrules_{delays_l} \mapsto l-1, j+1, ignore}{actions_j = resolve(r)} \tag{Def 1.7}
 \end{equation}\\
 
-This pair of actions, `resolve' and `delay', works together in order to implement \emph{delayed reductions}. 
-It is easy to see that the action $delay()$ immediately followed by the action $resolve(r)$ is identical to our original action $reduce(r)$ and could be used as a replacement.
-\footnote{However we've chosen to leave the original reduce action because the greater majority of actions in programming language grammars are deterministic.}.
-In the remainder of this section we will show how lookahead can be implemented by placing other actions between these two actions.
+The pair of actions, `resolve' and `delay', works together in order to implement \emph{delayed reductions}. 
+It is easy to see that the action $delay$ immediately followed by the action $resolve(r)$ is identical to our original action $reduce(r)$ and could be used as a replacement\footnote{We've chosen to keep the original reduce action because, in practice, programming language grammars often require very few lookaheads.}.
 
-\subsubsection{A modification of the `switch' and `return' actions}
-In order for the before mentioned pair of action to work together correctly we must also modify our original switch and return actions.
-\begin{equation}
-\infer{j, m \mapsto continuations_m, m-1}{actions_j = return()} \tag{Def 1.8}
-\end{equation}\\
+\subsubsection{The `return' action}
+A $return$ action is needed in order to return to the state from which the previous $switch(...)$ action jumped. 
+From a technical point of view, this allows a parser constructor to merge branches together, thus avoiding an exponential growth in the number of possible states. 
+Indeed this is a necessary condition for parsers that must handle recursive grammars.
 
 \begin{equation}
-\infer{i, j \mapsto i+1, gettarget(A, input_i)}{input_i \in A & actions_j = switch(A)} \tag{Def 1.9}
-\end{equation}\\
+\infer{j, l \mapsto callstack_l, l-1}{actions_j = return} \tag{Def 1.9}
+\end{equation}
 
+\subsubsection{A modification of the `switch' action}
+In order for the before mentioned action to work correctly we must also modify our original $switch$ action to record the state from which we've come.
+The current parser state index will be pushed onto a call stack to be returned to later.
+
+\begin{equation}
+\infer{i, j, callstack_l, l \mapsto i+1, getvalue(A, input_i), j+1, l+1}{input_i \in A & actions_j = switch(A)} \tag{Def 1.8}
+\end{equation}
+
+However error checking remains the same as before.
+\begin{equation}
+\infer{parsestate \mapsto error}{input_i \notin A & actions_j = switch(A)} \tag{Def 1.4}
+\end{equation}
 
 \subsection{Traces}
-To see how the delay/resolve pair can be used to look ahead in the we must investigate several different forms of grammar rules.
+To see how the delay/resolve pair can be used to look ahead in the input stream we must investigate several different forms of grammar rules.
 In order to do this we must generate all possible input strings for each form. 
-The concept of traces is used to show the actions that the parser must take for possibility.
+The concept of traces is used to show the actions that the parser must take for every possibility. 
 A trace is simply a sequence of actions that the parser must take to recognize a particular instance of a valid input stream for the given grammar.
-A mechanical method of generating traces is used such that every possibility could be enumerated, although on should be aware that the trace itself may not be finite.\\
+The advantage of this approach is that control flow can be ignored in order to focus exclusively on analysing which permutations of parsing actions produce equivalent output.
+A mechanical method of generating traces is used such that every possibility could be enumerated, although one should be aware that the trace itself may not be finite.\\
 
 In the following examples capitalized tokens represent nonterminals with subscripts differentiating between nonterminals produced by different rules. 
 Lowercase tokens represent terminals and $S$ is always the starting nonterminal. 
 Finally, $\$$ represents the special `end-of-stream' terminal indicating that no more input tokens remain.\\
 
-%%%%%%%%%%%%% Example 1: Simple grammar
-\subsubsection{Reduction based on a fixed lookahead}
+%%%%%%%%%%%%% Example 1: Reductions required a fixed size lookahead
+\subsubsection{Reductions requiring a fixed size lookahead}
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -443,8 +498,11 @@ G_1 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.8\textwidth}{A simple grammar two possible reductions.}
+\parbox{.8\textwidth}{This is a simple grammar requiring a fixed size lookahead in order to output one of the two production rules, $A_1$ or $B_1$.}
 \end{tabular}
+
+Suppose that this grammar was to be parsed by an LR(k) parser with a sufficiently large lookahead k. 
+We could write down all the possible traces for this parser using our `shift', `reduce' and `switch' actions while ignoring any possible lookahead actions that must take place as follows:
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_1) \equiv \\
@@ -452,7 +510,10 @@ G_1 \equiv \quad & A_1 \rightarrow x\\
    & \langle shift(x), reduce(B_1), switch(b), shift(\$), reduce(S_2) \rangle \}
 \end{align*}}
 
-However, note that this trace also be expanded with delay actions, so that the lookahead could be implemented. Hence an equivalent trace to the above is:
+Next we will exploit the fact that ordering of shift and switch actions relative to reduce actions is not enforced in our parsing methodology. This because a parse tree is only constructed during the second pass over the output reduction rules.
+This really implies that any recognition action directly followed by a reduce action may swap places. 
+Hence a trace $\langle shift(...), reduce(...) \rangle$ may be rewritten as $\langle reduce(...), shift(...) \rangle$ and similarly for switch statements $\langle switch(...), reduce(...) \rangle$ may be rewritten as $\langle reduce(...), switch(...) \rangle$.
+We apply this rule selectively to the above trace in ordser to produce an equivalent trace:
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_1) \equiv \\
@@ -460,8 +521,11 @@ However, note that this trace also be expanded with delay actions, so that the l
    & \langle shift(x), switch(b), reduce(B_1), shift(\$), reduce(S_2) \rangle \}
 \end{align*}}
 
+Take note that this equivalent trace requires no lookahead whatsoever! 
+Because the ordering of recognition and reduction operations have been relaxed many instances where a fixed lookahead would have been required by classical algorithms no longer apply.
+
 %%%%%%%%%%%%% Example 2: Optional reduction based on a fixed lookahead
-\subsubsection{Optional reduction based on a fixed lookahead}
+\subsubsection{Optional reduction requiring a fixed size lookahead}
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -469,8 +533,10 @@ G_2 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow x b \$
 \end{align*}}
-\parbox{.8\textwidth}{Here is a simple grammar requiring lookahead, but where some reductions do not take place.}
+\parbox{.8\textwidth}{In this grammar the rule $A_1$ may be output, or the possible reduction could be ignored if $b$ is in the lookahead.}
 \end{tabular}
+
+This grammar produces a similar trace as before, but with the first reduction omitted in the rule $S_2$.
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_2) \equiv \\
@@ -478,7 +544,7 @@ G_2 \equiv \quad & A_1 \rightarrow x\\
    & \langle shift(x), switch(b), shift(\$), reduce(S_2) \rangle \}
 \end{align*}}
 
-The equivalent trace with delays can be written as follows:
+Once again the need for lookahead can be circumvented by simply shuffling the order of operations.
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_2) \equiv \\
@@ -486,8 +552,10 @@ The equivalent trace with delays can be written as follows:
    & \langle shift(x), switch(b), shift(\$), reduce(S_2) \rangle \}
 \end{align*}}
 
-%%%%%%%%%%%%% Example 3: Disjointed reductions that require lookahead
-\subsubsection{Disjointed reductions that require lookahead}
+%%%%%%%%%%%%% Example 3: Disjoint reductions that require lookahead
+\subsubsection{Disjoint reductions that require lookahead}
+Reductions in different branches of a grammar's rules do not necessarily consume the same number of tokens. 
+In addition the prefix of their recognized token strings may be the same, which requires a lookahead to be performed.\\
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -497,8 +565,11 @@ G_3 \equiv \quad & A_1 \rightarrow x y\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow C B \$
 \end{align*}}
-\parbox{.8\textwidth}{sfd}
+\parbox{.8\textwidth}{The rules $A_1$ and $C_1$, $B_1$ in this grammar are partially disjoint.}
 \end{tabular}
+
+Once the lexical token $x$ has been seen, the parser must first look ahead 2 tokens before 
+deciding whether the string $x y$ belongs to $A_1$ or to $C_1$ followed by $B_1$.
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_3) \equiv \\
@@ -506,7 +577,7 @@ G_3 \equiv \quad & A_1 \rightarrow x y\\
    & \langle shift(x), reduce(C_1), shift(y), switch(b), reduce(B_1), shift(\$), reduce(S_2) \rangle \}
 \end{align*}}
 
-The equivalent trace with delays can be written as follows:
+This trace may also be reordered without any need for lookahead.
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_3) \equiv \\
@@ -514,8 +585,11 @@ The equivalent trace with delays can be written as follows:
    & \langle shift(x), shift(y), switch(b), reduce(C_1), reduce(B_1), shift(\$), reduce(S_2) \rangle \}
 \end{align*}}
 
-%%%%%%%%%%%%% Example 4: Right recursive grammars
-\subsubsection{Right recursive grammars}
+%%%%%%%%%%%%% Example 4: Right recursive reductions with outer lookahead
+\subsubsection{Right recursive reductions with outer lookahead}
+In the previous examples, the traces could simply be reordered in order to obviate the need for lookahead, however this is no longer possible in the presence of recursive grammar rules.
+Such a recursive grammar with a lookahead outside of its cycle no longer falls into the class of LR(k) grammars since k is unbounded in these instances.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -526,7 +600,8 @@ G_4 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.8\textwidth}{sfd}
+\parbox{.8\textwidth}{The rules $A_2$ and $B_2$ in this grammar are both in a form of \emph{tail recursion}. 
+We will also call this \emph{right recursion} in this paper in order to emphasize the contrast with \emph{left recursion}.}
 \end{tabular}
 
 \parbox{.3\textwidth}{\begin{align*}
@@ -537,7 +612,13 @@ G_4 \equiv \quad & A_1 \rightarrow x\\
    & \langle shift(x), shift(x), reduce(B_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle, \textellipsis \}
 \end{align*}}
 
-The equivalent trace with delays can be written as follows:
+While we could attempt to shuffle the operations in these traces so that reductions are only made after the tokens $a$ and $b$ have been recognized, 
+additional effort would be required on the part of the parser to remember the number and nature of reductions to apply. 
+By using a $return$ action we can determine which rules should be output, however the rules should also be applied in the correct order to produce the correct trace. 
+We will discuss this more fully in the following section.
+Suffice to say, reductions could be recognized in a reversed (top-down) order but needs to be output in the original (bottom-up) ordering.
+However our $delay/resolve$ mechanism will allow us to do exactly this by placing placeholders in the output stream and later replacing them in right-to-left order using $resolve$ actions.
+Hence, the equivalent trace can be written as follows:
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_4) \equiv \\
@@ -547,8 +628,11 @@ The equivalent trace with delays can be written as follows:
    & \langle shift(x), shift(x), delay, delay, switch(b), resolve(B_2), resolve(B_1), shift(\$), reduce(S_2) \rangle, \textellipsis \}
 \end{align*}}
 
+Notice the reverse ordering of the actions $\langle resolve(A_2), resolve(A_1) \rangle$ in contrast to the original $\langle reduce(A_1), reduce(A_2) \rangle$.
+A left recursive rule with outer lookahead may be resolved in much the same manner as a right recursive rule.
+
 %%%%%%%%%%%%% Example 5: Combined left and right recursive grammar
-\subsubsection{Combined left and right recursive grammar}
+\subsubsection{Combined left and right recursive grammar with outer lookahead}
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -559,7 +643,8 @@ G_5 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.8\textwidth}{sfd}
+\parbox{.8\textwidth}{The rules $A_2$ and $B_2$ are both partially disjoint and recursive. One is left recursive in this case while the other is right recursive and the combination
+requires a look ahead outside of the cycle.}
 \end{tabular}
 
 \parbox{.3\textwidth}{\begin{align*}
@@ -570,7 +655,7 @@ G_5 \equiv \quad & A_1 \rightarrow x\\
    & \langle shift(x), shift(x), delay, delay, switch(b), resolve(B_2), resolve(B_1), shift(\$), reduce(S_2) \rangle, \textellipsis \}
 \end{align*}}
 
-The equivalent trace with delays can be written as follows:
+An equivalent trace with delays can be written using delay/resolve actions as follows:
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_5) \equiv \\
@@ -580,133 +665,133 @@ The equivalent trace with delays can be written as follows:
    & \langle shift(x), shift(x), delay, delay, switch(b), resolve(B_2), resolve(B_1), shift(\$), reduce(S_2) \rangle, \textellipsis \}
 \end{align*}}
 
-%%%%%%%%%%%%% Example 6: 
-\subsubsection{}
-\begin{tabular}[t]{cl}
-\parbox{.3\textwidth}{
-\begin{align*}
-G_6 \equiv \quad & A_1 \rightarrow x\\
-                 & B_1 \rightarrow x\\
-                 & C_1 \rightarrow y\\
-                 & C_2 \rightarrow A C a\\
-                 & C_3 \rightarrow B C b\\
-                 & S_1 \rightarrow C \$
-\end{align*}}
-\parbox{.8\textwidth}{sfd}
-\end{tabular}s
+%%%%%%%%%%%%% Example: 
+%\subsubsection{}
+%\begin{tabular}[t]{cl}
+%\parbox{.3\textwidth}{
+%\begin{align*}
+%G_6 \equiv \quad & A_1 \rightarrow x\\
+%                 & B_1 \rightarrow x\\
+%                 & C_1 \rightarrow y\\
+%                 & C_2 \rightarrow A C a\\
+%                 & C_3 \rightarrow B C b\\
+%                 & S_1 \rightarrow C \$
+%\end{align*}}
+%\parbox{.8\textwidth}{sfd}
+%\end{tabular}
+%
+%\parbox{.3\textwidth}{\begin{align*}
+%&traces(G_6) \equiv \\
+%\{ & \langle switch(y), reduce(C_1), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(B_1), switch(y), reduce(C_1), switch(b), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), \\&\qquad switch(a), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(x), reduce(B_1), switch(y), reduce(C_1), switch(b), reduce(C_3), \\&\qquad switch(a), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(B_1), switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), \\&\qquad switch(b), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(B_1), switch(x), reduce(B_1), switch(y), reduce(C_1), switch(b), reduce(C_3), \\&\qquad switch(b), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
+%   & \textellipsis \}
+%\end{align*}}
+%
+%An equivalent trace with delays can be written using delay/resolve actions as follows:
+%
+%\parbox{.3\textwidth}{\begin{align*}
+%%\begin{equation*}
+%&traces(G_6) \equiv \\
+%\{ & \langle switch(y), reduce(C_1), shift(\$), reduce(S_1) \rangle,\\ 
+%%\begin{array}{l}
+%   &  \langle switch(x), delay(A,B), switch(y), reduce(C_1), switch(a), resolve(A), reduce(C_2), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
+%   &  \langle switch(x), delay(A,B), switch(y), reduce(C_1), switch(b), resolve(B), reduce(C_3), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
+%   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(a), resolve(A), \\&\qquad reduce(C_2), switch(a), resolve(A), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+%   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(b), resolve(B), \\&\qquad reduce(C_3), switch(a), resolve(A), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+%   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(a), resolve(A), \\&\qquad reduce(C_2), switch(b), resolve(B), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
+%   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(b), resolve(B), \\&\qquad reduce(C_3), switch(b), resolve(B), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
+%   &  \textellipsis
+%%\end{array}
+%\}
+%%\end{equation*}
+%\end{align*}}
 
-\parbox{.3\textwidth}{\begin{align*}
-&traces(G_6) \equiv \\
-\{ & \langle switch(y), reduce(C_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(B_1), switch(y), reduce(C_1), switch(b), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), \\&\qquad switch(a), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(x), reduce(B_1), switch(y), reduce(C_1), switch(b), reduce(C_3), \\&\qquad switch(a), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(B_1), switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), \\&\qquad switch(b), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(B_1), switch(x), reduce(B_1), switch(y), reduce(C_1), switch(b), reduce(C_3), \\&\qquad switch(b), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
-   & \textellipsis \}
-\end{align*}}
-
-The equivalent trace with delays can be written as follows:
-
-\parbox{.3\textwidth}{\begin{align*}
-%\begin{equation*}
-&traces(G_6) \equiv \\
-\{ & \langle switch(y), reduce(C_1), shift(\$), reduce(S_1) \rangle,\\ 
-%\begin{array}{l}
-   &  \langle switch(x), delay(A,B), switch(y), reduce(C_1), switch(a), resolve(A), reduce(C_2), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
-   &  \langle switch(x), delay(A,B), switch(y), reduce(C_1), switch(b), resolve(B), reduce(C_3), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
-   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(a), resolve(A), \\&\qquad reduce(C_2), switch(a), resolve(A), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
-   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(b), resolve(B), \\&\qquad reduce(C_3), switch(a), resolve(A), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
-   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(a), resolve(A), \\&\qquad reduce(C_2), switch(b), resolve(B), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
-   &  \langle switch(x), delay(A,B), switch(x), delay(A,B), switch(y), reduce(C_1), switch(b), resolve(B), \\&\qquad reduce(C_3), switch(b), resolve(B), reduce(C_3), shift(\$), reduce(S_1) \rangle,\\
-   &  \textellipsis
-%\end{array}
-\}
-%\end{equation*}
-\end{align*}}
-
-%%%%%%%%%%%%% Example 7: 
-\subsubsection{}
-\begin{tabular}[t]{cl}
-\parbox{.3\textwidth}{
-\begin{align*}
-G_7 \equiv \quad & A_1 \rightarrow x\\
-                 & B_1 \rightarrow x\\
-                 & C_1 \rightarrow y\\
-                 & C_2 \rightarrow C A a\\
-                 & C_3 \rightarrow C B b\\
-                 & S_1 \rightarrow C \$
-\end{align*}}
-\parbox{.8\textwidth}{sfd}
-\end{tabular}
-
-\parbox{.3\textwidth}{\begin{align*}
-&traces(G_7) \equiv \\
-\{ & \langle shift(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), reduce(A_1), switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), reduce(A_1), switch(a), reduce(C_2), switch(x), reduce(A_1), \\&\qquad switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), switch(x), reduce(A_1), \\&\qquad switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), reduce(A_1), switch(a), reduce(C_2), switch(x), reduce(B_1), \\&\qquad switch(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), switch(x), reduce(B_1), \\&\qquad switch(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \textellipsis \}
-\end{align*}}
-
-The equivalent trace with delays can be written as follows:
-
-\parbox{.3\textwidth}{\begin{align*}
-&traces(G_7) \equiv \\
-\{ & \langle shift(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(\$), \\&\qquad reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(\$), \\&\qquad reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(x), \\&\qquad delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(x), \\&\qquad delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(x), \\&\qquad delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(x), \\&\qquad delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \textellipsis \}
-\end{align*}}
+%%%%%%%%%%%%%% Example 7: 
+%\subsubsection{}
+%\begin{tabular}[t]{cl}
+%\parbox{.3\textwidth}{
+%\begin{align*}
+%G_7 \equiv \quad & A_1 \rightarrow x\\
+%                 & B_1 \rightarrow x\\
+%                 & C_1 \rightarrow y\\
+%                 & C_2 \rightarrow C A a\\
+%                 & C_3 \rightarrow C B b\\
+%                 & S_1 \rightarrow C \$
+%\end{align*}}
+%\parbox{.8\textwidth}{sfd}
+%\end{tabular}
+%
+%\parbox{.3\textwidth}{\begin{align*}
+%&traces(G_7) \equiv \\
+%\{ & \langle shift(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), reduce(A_1), switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), reduce(A_1), switch(a), reduce(C_2), switch(x), reduce(A_1), \\&\qquad switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), switch(x), reduce(A_1), \\&\qquad switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), reduce(A_1), switch(a), reduce(C_2), switch(x), reduce(B_1), \\&\qquad switch(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), switch(x), reduce(B_1), \\&\qquad switch(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \textellipsis \}
+%\end{align*}}
+%
+%The equivalent trace with delays can be written as follows:
+%
+%\parbox{.3\textwidth}{\begin{align*}
+%&traces(G_7) \equiv \\
+%\{ & \langle shift(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(\$), \\&\qquad reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(\$), \\&\qquad reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(x), \\&\qquad delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(x), \\&\qquad delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(x), \\&\qquad delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(y), reduce(C_1), switch(x), delay(A,B), switch(b), resolve(B_1), reduce(C_3), switch(x), \\&\qquad delay(A,B), switch(a), resolve(A_1), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \textellipsis \}
+%\end{align*}}
 
 %%%%%%%%%%%%% Example 8: 
-\subsubsection{}
-\begin{tabular}[t]{cl}
-\parbox{.3\textwidth}{
-\begin{align*}
-G_8 \equiv \quad & A_1 \rightarrow x\\
-                 & B_1 \rightarrow x\\
-                 & C_1 \rightarrow y\\
-                 & C_2 \rightarrow A C a\\
-                 & C_3 \rightarrow C B b\\
-                 & S_1 \rightarrow C \$
-\end{align*}}
-\parbox{.8\textwidth}{sfd}
-\end{tabular}
-
-\parbox{.3\textwidth}{\begin{align*}
-&traces(G_8) \equiv \\
-\{ & \langle switch(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(x), reduce(A_1), switch(y), reduce(C_1), shift(a), reduce(C_2), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \textellipsis \}
-\end{align*}}
-
-The equivalent trace with delays can be written as follows:
-
-\parbox{.3\textwidth}{\begin{align*}
-&traces(G_8) \equiv \\
-\{ & \langle switch(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(x), reduce(A_1), switch(y), reduce(C_1), shift(a), reduce(C_2), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
-   & \textellipsis \}
-\end{align*}}
+%\subsubsection{}
+%\begin{tabular}[t]{cl}
+%\parbox{.3\textwidth}{
+%\begin{align*}
+%G_8 \equiv \quad & A_1 \rightarrow x\\
+%                 & B_1 \rightarrow x\\
+%                 & C_1 \rightarrow y\\
+%                 & C_2 \rightarrow A C a\\
+%                 & C_3 \rightarrow C B b\\
+%                 & S_1 \rightarrow C \$
+%\end{align*}}
+%\parbox{.8\textwidth}{sfd}
+%\end{tabular}
+%
+%\parbox{.3\textwidth}{\begin{align*}
+%&traces(G_8) \equiv \\
+%\{ & \langle switch(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(x), reduce(A_1), switch(y), reduce(C_1), shift(a), reduce(C_2), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \textellipsis \}
+%\end{align*}}
+%
+%The equivalent trace with delays can be written as follows:
+%
+%\parbox{.3\textwidth}{\begin{align*}
+%&traces(G_8) \equiv \\
+%\{ & \langle switch(y), reduce(C_1), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(x), reduce(A_1), switch(y), reduce(C_1), shift(a), reduce(C_2), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(x), reduce(B_1), switch(b), reduce(C_3), shift(a), \\&\qquad reduce(C_2), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(x), reduce(A_1), switch(y), reduce(C_1), switch(a), reduce(C_2), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \langle switch(y), reduce(C_1), switch(x), reduce(B_1), shift(b), reduce(C_3), switch(x), reduce(B_1), shift(b), \\&\qquad reduce(C_3), switch(\$), reduce(S_1) \rangle,\\
+%   & \textellipsis \}
+%\end{align*}}
 
 %S1{ C1{y} $ }
 %S1{ C2{ A{x} C1{y} a} $ }
@@ -719,8 +804,8 @@ The equivalent trace with delays can be written as follows:
 %(Surprisingly enough, this one needs no look-aheads)
 
 
-%%%%%%%%%%%%% Example 9: A delayed rule in front of a cycle
-\subsubsection{A delayed rule in front of a cycle}
+%%%%%%%%%%%%% Example 9: Look ahead over a cycle
+\subsubsection{Look ahead over a cycle}
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -731,7 +816,8 @@ G_9 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A C a \$\\
                  & S_2 \rightarrow B C b \$
 \end{align*}}
-\parbox{.8\textwidth}{sfd}
+\parbox{.8\textwidth}{In this grammar the rules $A_1$ and $B_1$ are not recursive, however their lookahead includes a cycle in $C$. 
+This type of grammar also requires a delayed reductions to resolve the choice of $A_1$  $B_1$.}
 \end{tabular}
 
 \parbox{.3\textwidth}{\begin{align*}
@@ -747,10 +833,14 @@ The equivalent trace with delays can be written as follows:
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_9) \equiv \\
-\{ & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(y), reduce(C_2), switch(a), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
-   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(y), reduce(C_2), switch(b), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
+%\{ & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+%   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
+%   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(y), reduce(C_2), switch(a), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
+%   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(y), reduce(C_2), switch(b), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
+\{ & \langle shift(x), delay, shift(y), reduce(C_1), switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, shift(y), reduce(C_1), switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), delay, shift(y), reduce(C_1), switch(y), reduce(C_2), switch(a), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, shift(y), reduce(C_1), switch(y), reduce(C_2), switch(b), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
    & \textellipsis \}
 \end{align*}}
 
@@ -761,7 +851,7 @@ The equivalent trace with delays can be written as follows:
 
 
 %%%%%%%%%%%%% Example 10: Looking ahead into a cycle
-\subsubsection{Looking ahead into a cycle}
+\subsubsection{Look ahead into a cycle}
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -774,7 +864,8 @@ G_{10} \equiv \quad & A_1 \rightarrow x\\
                   & S_1 \rightarrow A C \$\\
                   & S_2 \rightarrow B D \$
 \end{align*}}
-\parbox{.8\textwidth}{sfd}
+\parbox{.8\textwidth}{Some times the lookahead itself will be contained inside a cycle.
+In this example the preceeding rules $A_1$ and $B_1$ depend on a lookahead within the recursive rules $C_2$ and $D_2$.}
 \end{tabular}
 
 \parbox{.3\textwidth}{\begin{align*}
@@ -790,10 +881,14 @@ The equivalent trace with delays can be written as follows:
 
 \parbox{.3\textwidth}{\begin{align*}
 &traces(G_{10}) \equiv \\
- \{ & \langle shift(x), delay(A, B), switch(a), reduce(C_1), resolve(A), shift(\$), reduce(S_1) \rangle,\\
-    & \langle shift(x), delay(A, B), switch(b), reduce(D_1), resolve(B), shift(\$), reduce(S_2) \rangle,\\
-    & \langle shift(x), delay(A, B), switch(y), switch(a), reduce(C_1), reduce(C_2), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
-    & \langle shift(x), delay(A, B), switch(y), switch(b), reduce(D_1), reduce(D_2), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
+% \{ & \langle shift(x), delay(A, B), switch(a), reduce(C_1), resolve(A), shift(\$), reduce(S_1) \rangle,\\
+%    & \langle shift(x), delay(A, B), switch(b), reduce(D_1), resolve(B), shift(\$), reduce(S_2) \rangle,\\
+%    & \langle shift(x), delay(A, B), switch(y), switch(a), reduce(C_1), reduce(C_2), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
+%    & \langle shift(x), delay(A, B), switch(y), switch(b), reduce(D_1), reduce(D_2), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
+ \{ & \langle shift(x), delay, switch(a), reduce(C_1), resolve(A), shift(\$), reduce(S_1) \rangle,\\
+    & \langle shift(x), delay, switch(b), reduce(D_1), resolve(B), shift(\$), reduce(S_2) \rangle,\\
+    & \langle shift(x), delay, switch(y), switch(a), reduce(C_1), reduce(C_2), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
+    & \langle shift(x), delay, switch(y), switch(b), reduce(D_1), reduce(D_2), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
     & \textellipsis \}
 \end{align*}}
 
@@ -802,10 +897,135 @@ The equivalent trace with delays can be written as follows:
 %S1 { A{x} C2{ y C1{a} } $ }
 %S2 { B{x} D2{ y D1{b} } $ }
 
+\subsection{A left-to-right parser with delayed reductions}
+We've seen that the instruction set given could in theory be used to construct parsers for a large range of context-free grammars if we can show that such a parser will produce the traces given above.
+In \cite{knuth65} Knuth showed that determining whether a grammar is in the class LR(k) for some unspecified k is undecidable in general. \emph{ (TODO: Discuss how this affects our work) }\\
+
+\emph{TODO:
+When calling functions in a recursive-ascent parser we are intuitively traversing the grammar's state diagram in a bottom-up manner.
+However, when returning from a function to a previous state we revert to a top-down traversal.
+Hence traversing the call stack in an upward or a downward direction can be viewed as switching between top-down versus bottom-up recognition of the grammar. 
+In more general terms, when the bottom-up technique cannot reduce a rule it become resolved in a top-down fashion later on by replacing the delayed placeholder token.}
+
 %%%%%%%%%%%%%%%%%%% IMPLEMENTATION
 \section{Implementation}
-\subsection{Parser construction}
+\subsection{Overview}
+In this section we will describe implementation details of the an interpreter for our parsing DSL along with a prototype parser construction algorithm, 
+beginning with a basic description of the data structures used.\\
+
+\subsection{Internal representation}
+We will describe our parsers' internal representation as an encoded stream of opcodes accompanied by their arguments. 
+We will refer to this stream as the \emph{bitcode}\footnote{This is perhaps more commonly refered to as \emph{bytecode}, refering to the idea that an opcode is encoded by a single byte. We've chosen to use the more general term \emph{bitcode} employed by the popular LLVM infrastructure.} encoding of a parser.
+In our implementation the bitcodes for a single instruction is packed into a varying number of bytes.
+
+An implementation may however choose any suitable internal representation and we anticipate that implementors may choose to translate the bitcode to the internal representation suitable for their target language or machine.
+\texttt{opcode, [arguments...]}
+
+We've made certain optimistic optimizations in order to minimize the cost of instruction decoding. 
+For this reason an opcode is often a packed representation of the particular instruction.
+In particular terminal tokens always represent $shift$ instructions while nonterminal tokens represent $reduce$ instructions.
+This is done by using the highest bit to distinguish between terminals and nonterminals and hence also between $shift$ and $reduce$ actions.
+An additional bit flags in highest byte is then used to modify the  $reduce$ instructions by changing it into the corresponding $resolve$ instruction.
+Finally, certain opcode values are reserved for the remaining instructions which also include additional arguments.
+
+\begin{itemize}
+\item A special token called $ignore$ represents the $delay$ instruction and is also used as the placeholder token that is appended to the rules buffer by the $delay$ action.
+\item The $pivot$ opcode corresponds to the instruction by the same name. It is coded as the string\\\\
+      \texttt{pivot, length, (terminal, target\_state)\*}\\\\
+      where $length$ is the number of pairs that map terminal tokens to their target states.
+\item $return$ is the simple opcode corresponding to the same instruction but takes no arguments
+\item $goto$ is the opcode corresponding to the instruction coded as\\\\
+      \texttt{goto, source\_state, target\_state}\\
+\item $accept$ is the opcode corresponding to the final $return$ instruction that ends the recognition pass.
+\end{itemize}
+
+This configuration makes decoding $shift$ instructions efficient and convenient since we can simply test for equality with lexical tokens read from the input stream. 
+Next the opcode that is decoded to a $reduce$ or $resolve$ instruction if it matches, followed by tests for each of $pivot$, $return$, $goto$ and finally $accept$.
+
 \subsection{Parser interpreter}
+
+Below we show an interpreter for the parser instruction set that we developed in the previous section of the paper. 
+
+\begin{figure}[!ht]
+\begin{center}
+\begin{gcl}
+\PROC DecodeShift(opcode, lexToken)
+  \textbf{return}\ (opcode = lexToken);
+\CORP
+
+\PROC DecodeReduce(opcode)
+  \textbf{return}\ TestFlag(opcode, FLAG\_REDUCE);
+\CORP
+
+\PROC DecodeResolve(opcode)
+  \textbf{return}\ TestFlag(opcode, FLAG\_RESOLVE);
+\CORP
+
+\PROC DecodeReturn(opcode)
+  \textbf{return}\ (opcode = TOKEN\_RETURN);
+\CORP
+
+\PROC DecodeDelay(opcode)
+  \textbf{return}\ (opcode = TOKEN\_IGNORE);
+\CORP
+
+\PROC DecodeGoto(opcode)
+  \textbf{return}\ (opcode = TOKEN\_GOTO);
+\CORP
+
+\PROC DecodeAccept(opcode)
+  \textbf{return}\ (opcode = TOKEN\_ACCEPT);
+\CORP
+
+
+In the pseudo code bellow we have abstracted away certain details.
+We also have assumed valid implementations of the functions $TestFlag$ and $LexicalAnalysis$.
+
+\clearpage
+\begin{figure}[!ht]
+\begin{center}
+\begin{gcl}
+\PROC ParseText(textStream)
+[ \text{Text stream is an array of characters} ]
+LexicalAnalysis(lexStream, textStream);
+[ \text{lexStream is an array of lexical tokens output by the lexer ending with the special end-of-stream token \$.} ]
+RecognitionPass(rulesStream, lexStream);
+[ \text{rulesStream is an array of rule tokens output by the recognition pass, each of which corresponds to a specific grammar rule or the the special $ignore$ token.} ]
+TranslationPass(parseTree, rulesStream, lexStream, textStream);
+[ \text{parseTree is the final discrete syntax tree produced by applying each of the rules in the rulesStream. } ]
+\CORP
+
+\PROC RecognitionPass(rulesStream, lexStream, bitcodeStream)
+    i \becomes 0;
+    \DO lexStream_i \neq TOKEN\_\$ \rightarrow
+      \DO DecodeShift(Opcode(bitcodeStream_j), lexStream_i) \rightarrow
+      \qquad Append(rulesStream, token);
+      \BAR DecodeReduce(Opcode(bitcodeStream_j))
+      \BAR DecodeReduce(Opcode(bitcodeStream_j))
+      j \becomes j + 1;
+    \OD
+    i \becomes i + 1;
+  \OD
+\CORP
+
+\PROC TranslationPass(parseTree, rulesStream, lexStream, textStream)
+treeNode \becomes parseTree;
+Append(parseTree, rulesStream_{j});
+j \becomes j + 1;
+\CORP
+\end{gcl}
+\caption{An interpreter for the LD parsing DSL.}
+\end{center}
+\end{figure}
+
+
+\subsection{Parser construction algorithm}
+Constructing a parser by hand is a time consuming and error prone process. For this reason an automatic construction algorithm is desireable. 
+Hence, in this section we will provide a prototype algorithm that is sufficient for many grammars. 
+In the final section of this paper we will discuss the limitations of this algorithm and discuss some proposals for extending this algorithm in order to take into account the full set
+of context free grammars. 
+
+(TODO: We will also show that parsers built using this technique already includes the entire class of LR(1) grammars)
 
 \section*{Results}
 
@@ -813,12 +1033,16 @@ The equivalent trace with delays can be written as follows:
 
 \section*{Future work}
 
+The implementation of the parser interpreter still promises many potential improvements. 
+
 \emph{ %BUSY HERE
 (TODO)\\
 Open problems: problematic unambiguous context-free grammars (nested lookahead problem + construction problem), progressive parsing (combining the recognition and builder passes), formal proofs of correctness\\
+Suggest that delays should be encoded as stacks of continuations similar to functional programming rather than as a simple callstack?\\
 Performance analysis and benchmarks\\
 Termination analysis\\
-Parallelization?\\
+Proof is needed for the absence of exponential growth of states in the generated parser\\
+Parallelization / pipelined implementations?\\
 Application to other grammar classes (E.g. ambiguous context-free and context-sensitive grammars)\\
 Perhaps applications to other dynamic programming problems? How does it relate to automatic memoization in functional programming? (I.e. Memoization is an automatically deduced top-down dynamic programming mechanism. Is it possible to find bottom-up/hybrid solutions automatically?)
 }
