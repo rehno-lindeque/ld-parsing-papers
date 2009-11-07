@@ -902,16 +902,90 @@ We've seen that the instruction set given could in theory be used to construct p
 In \cite{knuth65} Knuth showed that determining whether a grammar is in the class LR(k) for some unspecified k is undecidable in general. \emph{ (TODO: Discuss how this affects our work) }\\
 
 \emph{TODO:
-When calling functions in a recursive-ascent parser we are intuitively traversing the grammar's state diagram in a bottom-up manner.
+When calling procedures in a recursive-ascent parser we are intuitively traversing the grammar's state diagram in a bottom-up manner.
 However, when returning from a function to a previous state we revert to a top-down traversal.
 Hence traversing the call stack in an upward or a downward direction can be viewed as switching between top-down versus bottom-up recognition of the grammar. 
 In more general terms, when the bottom-up technique cannot reduce a rule it become resolved in a top-down fashion later on by replacing the delayed placeholder token.}
 
 %%%%%%%%%%%%%%%%%%% IMPLEMENTATION
 \section{Implementation}
-\subsection{Overview}
-In this section we will describe implementation details of the an interpreter for our parsing DSL along with a prototype parser construction algorithm, 
-beginning with a basic description of the data structures used.\\
+\subsection{Parser interpreter}
+
+In our implementation a generated parser is executed by an interpreter for the instruction set that we developed in the previous section of the paper.
+The basic interpreter is described here with most of the optimizations and certain technical details removed for the sake of clarity. 
+Additional implementation details will be briefly described in the last part of this section along with the internal representation of the generated parsers.\\
+
+Three procedures are responsible for the execution of the parser. 
+The first is a call to the lexer which is responsible for tokenizing the text file into the correct format for our main parsing functions.
+We will gloss over this step as it is outside the scope of this work, but any suitable lexer can be dropped in and used at this point.
+Next the recognition pass is executed, which takes the stream of lexical tokens and outputs a stream of rules. 
+The translation pass is then responsible for iterating through these rules in order to assemble a concrete syntax tree, the resulting output of the parsing operation.
+\emph{TODO: what about syntax errors?}
+
+\begin{figure}[!ht]
+\begin{center}
+\begin{gcl}
+\PROC ParseText(parseTree, textStream)
+LexicalAnalysis(lexStream, textStream);
+RecognitionPass(rulesStream, lexStream);
+TranslationPass(parseTree, rulesStream, lexStream, textStream);
+\CORP
+\end{gcl}
+\caption{Three main stages of the interpreter.}
+\end{center}
+\end{figure}
+
+The primary operations performed by the recognition pass involve decoding instructions from the generated parser and their application on the lex stream and the rules stream. 
+Note that the generated parser instructions is encoded in a bitcode array whose internal format is described more fully later on.
+Sizes of records in the bitcode stream may vary, but for presentation purposes we will assume that every record in the stream can be accessed using a simple subscript.
+In reality iteration over the encoded instructions occurs in a more ad hoc manner.
+
+\clearpage
+\begin{figure}[!ht]
+\begin{center}
+\begin{gcl}
+\PROC RecognitionPass(rulesStream, lexStream, bitcodeStream)
+    i \becomes 0;
+    \DO lexStream_i \neq TOKEN\_\$ \rightarrow
+      \DO DecodeShiftOp(bitcodeStream_j, lexStream_i) \rightarrow
+      \quad Append(rulesStream, token);
+      \BAR DecodeReduceOp(bitcodeStream_j) \rightarrow
+      j \becomes j + 1;
+      \BAR DecodeResolveOp(bitcodeStream_j) \rightarrow
+      j \becomes j + 1;
+      \BAR DecodeDealayOp(bitcodeStream_j) \rightarrow
+      j \becomes j + 1;
+      \BAR DecodeReturnOp(bitcodeStream_j) \rightarrow
+      j \becomes j + 1;
+      \BAR DecodeAcceptOp(bitcodeStream_j) \rightarrow
+      j \becomes j + 1;
+    \OD
+    i \becomes i + 1;
+  \OD
+\CORP
+\end{gcl}
+\caption{Basic implementation .}
+\end{center}
+\end{figure}
+
+Once the recognition pass has filled the rules stream, the translation pass can take over. 
+In much the same manner as any LR parser, the translation pass can simply iterate over the rules assembling the parse tree in a bottom up fashion. 
+Because every grammar rule is a concrete instance of a grammar production, a parse tree can be constructed deterministically without reference to the lex stream 
+other than to copy lexical tokens or their underlying data to the new parse tree structure.
+Alternatively one could also construct this tree in a top-down fashion by simply iterating through the rules in reverse.
+
+\begin{figure}[!ht]
+\begin{center}
+\begin{gcl}
+\PROC TranslationPass(parseTree, rulesStream, lexStream, textStream)
+treeNode \becomes parseTree;
+Append(parseTree, rulesStream_{j});
+j \becomes j + 1;
+\CORP
+\end{gcl}
+\caption{An interpreter for the LD parsing DSL.}
+\end{center}
+\end{figure}
 
 \subsection{Internal representation}
 We will describe our parsers' internal representation as an encoded stream of opcodes accompanied by their arguments. 
@@ -942,81 +1016,7 @@ Finally, certain opcode values are reserved for the remaining instructions which
 This configuration makes decoding $shift$ instructions efficient and convenient since we can simply test for equality with lexical tokens read from the input stream. 
 Next the opcode that is decoded to a $reduce$ or $resolve$ instruction if it matches, followed by tests for each of $pivot$, $return$, $goto$ and finally $accept$.
 
-\subsection{Parser interpreter}
 
-Below we show an interpreter for the parser instruction set that we developed in the previous section of the paper. 
-
-\begin{figure}[!ht]
-\begin{center}
-\begin{gcl}
-\PROC DecodeShift(opcode, lexToken)
-  \textbf{return}\ (opcode = lexToken);
-\CORP
-
-\PROC DecodeReduce(opcode)
-  \textbf{return}\ TestFlag(opcode, FLAG\_REDUCE);
-\CORP
-
-\PROC DecodeResolve(opcode)
-  \textbf{return}\ TestFlag(opcode, FLAG\_RESOLVE);
-\CORP
-
-\PROC DecodeReturn(opcode)
-  \textbf{return}\ (opcode = TOKEN\_RETURN);
-\CORP
-
-\PROC DecodeDelay(opcode)
-  \textbf{return}\ (opcode = TOKEN\_IGNORE);
-\CORP
-
-\PROC DecodeGoto(opcode)
-  \textbf{return}\ (opcode = TOKEN\_GOTO);
-\CORP
-
-\PROC DecodeAccept(opcode)
-  \textbf{return}\ (opcode = TOKEN\_ACCEPT);
-\CORP
-
-
-In the pseudo code bellow we have abstracted away certain details.
-We also have assumed valid implementations of the functions $TestFlag$ and $LexicalAnalysis$.
-
-\clearpage
-\begin{figure}[!ht]
-\begin{center}
-\begin{gcl}
-\PROC ParseText(textStream)
-[ \text{Text stream is an array of characters} ]
-LexicalAnalysis(lexStream, textStream);
-[ \text{lexStream is an array of lexical tokens output by the lexer ending with the special end-of-stream token \$.} ]
-RecognitionPass(rulesStream, lexStream);
-[ \text{rulesStream is an array of rule tokens output by the recognition pass, each of which corresponds to a specific grammar rule or the the special $ignore$ token.} ]
-TranslationPass(parseTree, rulesStream, lexStream, textStream);
-[ \text{parseTree is the final discrete syntax tree produced by applying each of the rules in the rulesStream. } ]
-\CORP
-
-\PROC RecognitionPass(rulesStream, lexStream, bitcodeStream)
-    i \becomes 0;
-    \DO lexStream_i \neq TOKEN\_\$ \rightarrow
-      \DO DecodeShift(Opcode(bitcodeStream_j), lexStream_i) \rightarrow
-      \qquad Append(rulesStream, token);
-      \BAR DecodeReduce(Opcode(bitcodeStream_j))
-      \BAR DecodeReduce(Opcode(bitcodeStream_j))
-      j \becomes j + 1;
-    \OD
-    i \becomes i + 1;
-  \OD
-\CORP
-
-\PROC TranslationPass(parseTree, rulesStream, lexStream, textStream)
-treeNode \becomes parseTree;
-Append(parseTree, rulesStream_{j});
-j \becomes j + 1;
-\CORP
-\end{gcl}
-\caption{An interpreter for the LD parsing DSL.}
-\end{center}
-\end{figure}
 
 
 \subsection{Parser construction algorithm}
