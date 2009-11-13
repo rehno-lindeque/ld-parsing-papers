@@ -1,7 +1,8 @@
 
-\documentclass[11pt]{article}
+\documentclass[a4paper,11pt]{article}
 
 %%%%%%%%%%%%%%%%%%% PACKAGES %%%%%%%%%%%%%%%%%%%
+\usepackage{tikz}
 \usepackage{geometry}
 \geometry{a4paper}
 \usepackage{gcl}
@@ -102,10 +103,10 @@
 %%%%%%%%%%%%%%%%%%% DOCUMENT %%%%%%%%%%%%%%%%%%%
 \begin{document}
 
-\title{A case for the use of delayed reductions in left-to-right parsing of context-free grammars}
-\author{Rehno Lindeque
-\\23123576
-\\Supervisors: Derrick Kourie, Bruce Watson}
+\title{A case for delayed reductions in left-to-right parsing of context-free grammars}
+\author{\textbf{Supervisors:} Derrick Kourie, Bruce Watson\\
+\textbf{Author:} Rehno Lindeque (23123576)\\
+}
 
 \maketitle
 
@@ -121,13 +122,36 @@ In addition a prototype construction algorithm is presented, capable of generati
 Finally we discuss the remaining problems with this technique and possible approaches to resolving them in future work.\\
 \end{abstract}
 
-\textbf{Keywords:} LD parsing, Recursive-ascent parsing, context-free grammars, generalized parsing, GLR parsing, LR parsing, LL parsing
+\textbf{Keywords:} LD parsing, Recursive-ascent parsing, context-free grammar, generalized parsing, GLR parsing, LR parsing, LL parsing
 
 \section{Introduction}
 
 \subsection{Top-down vs Bottom-up parsing}
 
-Two well known strategies exist in which most parsing algorithm can be categorized.
+The subject of parsing is widely regarded to be a well-understood topic in computer science having been exposed to many years of study.
+Two general strategies have been identified known as top-down and bottom-up parsing. 
+Most parsing algorithms can be categorized into one of these two methodologies although a few hybrid examples do exist.\\
+
+In \cite{knuth65} Knuth developed a body of theoretical knowledge around the concept of ``left-to-right parsers with rightmost derivation'' known in short as \emph{LR parsers}. 
+Over time many variants [citation needed: LALR, SLR, etc.] and optimizations [citation needed: Very Fast LR Parsing, Thomas J. Pennell] of LR parsing has been suggested.
+When classifying a grammar for LR parsing we usually refer to an \emph{LR(k)} grammar where $k$ indicates some fixed \emph{lookahead} value,
+allowing the parser to look forward in the stream of input tokens when deciding on the next action to take.
+However, the traditional approach to generating LR parsers with $k > 2$ has proven prohibitively difficult causing most tools that employ LR or LALR techniques to restrict lookahead to very small values.
+In \emph{todo} to this these tools remain some of the most effective parser generators where efficiency of the generated parser is concerned.\\
+
+Top-down parsing techniques operate by deriving productions near the root of the grammar before attempting to derive productions further down the tree.
+Bottom-up techniques on the other hand attempt to deduce the leaf nodes of the parse tree first before moving up to the root nodes.
+
+Top-down parsers are often programmed by hand using a methodology called ``recursive descent'' parsing [citation needed].
+A procedure is created for every production in the grammar and child productions are derived by calling their procedures in a recursive fashion.
+This methodology makes a familiar analogy to LL parsing easy.
+
+Recursive ascent parsing, considered to be an analog to recursive descent for LR parsers, ... Recursive ascent parsers %\cite{13326, 47909, 770849}.
+once again procedures corresponding to productions are called recursively. 
+However, this style explores the parse tree in a bottom-up manner.
+Every procedure returns the deduced production to its caller, allowing the caller to decide 
+Indeed recursive ascent has been advocated as a learning exercise or teaching LR parsing. %\cite{13326, 47909, 770849}.
+Our parsing strategy, although somewhat different from a technical point of view, \emph{TODO: presents, illustrates, demonstrates, gives rise to a comparison with} some commonality with recursive ascent parsing.
 
 \emph{(TODO)\\ %BUSY HERE
 LL parsing\\
@@ -136,28 +160,49 @@ Recursive ascent parsers \cite{13326, 47909, 770849} }
 
 \subsection{Generalized parsing approaches}
 
+
+\emph{(TODO)\\ %BUSY HERE
+Motivation: Translation versus recognition (why k $>$ 1 lookahead is needed) \cite{Parr95lland}}
+
+Several techniques have shown promise in ....(presenting) more generalized parsing models
+
+
 ... the parser must \emph{look ahead} into the input stream in order to derive the correct rule to reduce.
 
 \emph{(TODO)\\ %BUSY HERE
-Motivation: Translation versus recognition (why k $>$ 1 lookahead is needed) \cite{Parr95lland}\\
 Generalized Parsing Techniques \cite{Thurston07}\\
 Chart parsers: Earley $\rightarrow$ GLR \\
 Right Nulled GLR Parsers \cite{1146810}\\
 Performance of GLR Parser \cite{Mcpeak04elkhound:a}\\ %(Same asymptotic performance, but slower by about a factor of 10x according to \cite{Mcpeak04elkhound:a} due to complicated data structures (Stack Structured Graph)
 %(todo: find a better reference?))\\
 Previous work on delayed reductions (similar ideas, but rather different algorithms) \cite{1287949, Marc80, 991520, 146993}\\
+%TODO:          Shift-Resolve Parsing: Simple,
+%     Unbounded Lookahead, Linear Time∗
+%Jos ́ Fortes G ́lvez
+%   e            a           Sylvain Schmitz            Jacques Farr ́e
+%         Universidad de Las Palmas de Gran Canaria, Spain
+%                        jfortes@dis.ulpgc.es
+%     Laboratoire I3S, Universit ́ de Nice - Sophia Antipolis, France
+%                               e
+%          schmitz@i3s.unice.fr, Jacques.Farre@unice.fr
 Parsing with continuations
 }
 
+
+In theory LR(k) parser has been shown to be more powerful than their equivalent LL(k) parsers because an LR parser uses more context information to derive reductions.
+For this reason larger values of k is often desirable in practical LL parsers.
+However, LL(k) parsing, long believed to be intractable for large values of k, has shown large improvements in performance through the use of deterministic finite automata. 
+Additionally LL parsing has proven amenable to extension for larger classes of grammars than plain LR and LARL parsers can handle.
+The popular ANTLR parser makes use of these techniques and has introduced two variants: LL(*) [citation needed]\cite{} and more recently Predicated-LL \cite{} [citation needed].
+s
+Despite significant improvements in the efficiency of GLR parsers, they are still regarded as slow in comparison to their traditional LALR counterparts despite equivalent algorithmic performance.
+This is usually attributed to the cost of maintaining the stack-structured graph that gives such a parser the capability to merge different branches. [citation needed?]
 
 \subsection{Overview}
 \emph{(TODO: Expand + look at phrasing)}
 This remainder of this paper will be structured as follows. 
 We begin by describing the basic ideology behind using delayed parsing actions along with some basic examples of their utility.
 Next, the theoretical aspects of the parser is explored along with formal definitions and proofs.
-
-
-
 
 
 \section{Delayed reductions}
@@ -186,7 +231,7 @@ Once the rule can be resolved, the placeholder token is replaced with the correc
 In order to keep track of placeholders we also record their indexes in a separate stack, allowing the parser to return to these tokens later on and replace them using random-access writes.
 
 
-Due to placeholder representing We will also refer to placeholder tokens as 'delayed rules'...\\
+Due to placeholder representing We will also refer to placeholder tokens as `delayed rules'...\\
 
 
 In effect, placeholders are used in order to delay reductions until some unspecified lookahead has been recognized.
@@ -270,7 +315,7 @@ By contrast, shift actions do not make any significant contribution to the inter
 	
 \subsubsection{The `reduce' action}
 \texttt{reduce(rule)}\\
-The parameter given to the reduce action is an index into a list of all rules in the given grammar where every rule is in the form \texttt{nonterminaltoken $\rightarrow$ terminaltoken \textellipsis}. 
+The parameter given to the reduce action is an index into a list of all rules in the given grammar where every rule is in the form \texttt{nonterminaltoken $\rightarrow$ terminaltoken \textellipsis}
 A production in a grammar may be reduced from any number of different sequences of terminal tokens, however a rule recognizes only one possible sequence of terminal tokens.
 In other words, given some rule both the left and right side of the reduction can be determined (although identifiers must still be stored).
 For this reason we use rule numbers internally rather than using grammar productions directly.
@@ -504,7 +549,7 @@ G_1 \equiv \quad & A_1 \rightarrow x\\
 Suppose that this grammar was to be parsed by an LR(k) parser with a sufficiently large lookahead k. 
 We could write down all the possible traces for this parser using our `shift', `reduce' and `switch' actions while ignoring any possible lookahead actions that must take place as follows:
 
-\parbox{.3\textwidth}{\begin{align*}
+\parbox{.25\textwidth}{\begin{align*}
 &traces(G_1) \equiv \\
 \{ & \langle shift(x), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), switch(b), shift(\$), reduce(S_2) \rangle \}
@@ -1004,8 +1049,8 @@ Finally, certain opcode values are reserved for the remaining instructions which
 
 \begin{itemize}
 \item A special token called $ignore$ represents the $delay$ instruction and is also used as the placeholder token that is appended to the rules buffer by the $delay$ action.
-\item The $pivot$ opcode corresponds to the instruction by the same name. It is coded as the string\\\\
-      \texttt{pivot, length, (terminal, target\_state)\*}\\\\
+\item The $switch$ opcode corresponds to the instruction by the same name. It is coded as the string\\\\
+      \texttt{switch, length, (terminal, target\_state)\*}\\\\
       where $length$ is the number of pairs that map terminal tokens to their target states.
 \item $return$ is the simple opcode corresponding to the same instruction but takes no arguments
 \item $goto$ is the opcode corresponding to the instruction coded as\\\\
@@ -1014,26 +1059,351 @@ Finally, certain opcode values are reserved for the remaining instructions which
 \end{itemize}
 
 This configuration makes decoding $shift$ instructions efficient and convenient since we can simply test for equality with lexical tokens read from the input stream. 
-Next the opcode that is decoded to a $reduce$ or $resolve$ instruction if it matches, followed by tests for each of $pivot$, $return$, $goto$ and finally $accept$.
-
-
-
+Next the opcode that is decoded to a $reduce$ or $resolve$ instruction if it matches, followed by tests for each of $switch$, $return$, $goto$ and finally $accept$.
 
 \subsection{Parser construction algorithm}
-Constructing a parser by hand is a time consuming and error prone process. For this reason an automatic construction algorithm is desireable. 
-Hence, in this section we will provide a prototype algorithm that is sufficient for many grammars. 
-In the final section of this paper we will discuss the limitations of this algorithm and discuss some proposals for extending this algorithm in order to take into account the full set
-of context free grammars. 
+Constructing a parser by hand is a time consuming and error prone process. For this reason an automatic construction algorithm is desireable.
+As a prototype we have constructed a prototype parser generator that is sufficient for many grammars including grammars with lookahead greater than 1.\\
+Given a grammar specification, the construction algorithm outputs the bitcode representation to be used with the interpreter.\\
+
+We will use a state graph to represent various possible states that the parser can inhabit. 
+Every \emph{state} is composed of a set of unique items. 
+In turn an \emph{item} refers to specific grammar rule and a state cursor.
+Finally states have two types of edges leading from one state to another. 
+The first type represents $switch$ branches and the second represents $goto$ edges. We also distinguish between \emph{leading} and \emph{following} edges with reference to a particular state node.\\
+
+Along with a grammar specification, a user must also specify the top-most nonterminal in the grammar which, given a conforming input stream, should form the root node of the final parse tree.\\
+For example given the following grammar:
+
+\parbox{.3\textwidth}{\begin{align*}
+G \equiv \quad & A_1 \rightarrow x\\
+               & B_1 \rightarrow x\\
+               & B_2 \rightarrow x z\\
+               & C_1 \rightarrow y\\
+               & C_2 \rightarrow C y\\
+               & S_1 \rightarrow A C a \$\\
+               & S_2 \rightarrow B C b \$
+\end{align*}}
+
+The initial state will contain the rules corresponding the root production of the grammar, in this case $S_1$ and $S_2$.
+
+\begin{figure}[!ht]
+\begin{center}
+\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S0) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow . A C a \$\\
+     & S_2 \rightarrow . B C b \$
+     \end{align*}}
+   };
+   \path (-1.5,0.9) node (S0n) {0};
+\end{tikzpicture}
+\caption{An example root state node in the parser generator.}
+\end{center}
+\end{figure}
+
+The period on the right hand side of each rule is a cursor indicating the progress of the rule in a particular parser state.
+For example, given an item $W_1 \rightarrow x . y$, this would indicate that the terminal $x$ has been recognized, and only $y$ remains to be parsed in order to recognize this rule.\\
+
+Once an initial state node has been constructed the main loop of the algorithm takes over. 
+The state is expanded until a non-deterministic \emph{branch state} is reached where a parser would be required to make a choice corresponding to the $switch$ action.
+During the expansion progresses, parsing instructions are recorded into an \emph{instruction table} which will be encoded into bitcode stream once the algorithm completes.
+The instruction table is an array of dynamically growing `strings' of instructions. 
+Each \emph{instruction string} corresponds to a particular branch state in the state graph.
+An alternative view of this idea is that every instruction string could represent a procedure of a recursive ascent parser written in an imperative programming language.
+The following steps iteratively expand the state until a branch state is reached.
+
+\begin{enumerate}
+\item Expand items --- The token directly to the right of every cursor is inspected. 
+If the token is a nonterminal token, then the item is replaced with the following items: For every rule producing this nonterminal on the left, duplicate the item and annotate it with this rule number.
+In addition a new item corresponding with the given rule and a cursor in the initial position may be added to the state whenever an old item is annotated. 
+An exception is made only when such an item already exists in the state, in which case only the annotation takes place.
+Once this process is completed the newly added (unannotated) items are again expanded until no more unnanoted items with nonterminals following the cursor can be found. 
+For example, following the expansion procedure our example state will look like this.
+
+\begin{figure}[!ht]
+\begin{center}
+\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow . A C a \$ \quad {(A_1)}\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_1)}\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_2)}\\
+     & A_1 \rightarrow . x\\
+     & B_1 \rightarrow . x\\
+     & B_2 \rightarrow . x z
+     \end{align*}}
+   };
+   \path (-2,2) node (S0n) {0};
+\end{tikzpicture}
+\caption{An example state after items have been expanded.}
+\end{center}
+\end{figure}
+
+\item Shift terminal tokens --- Once all items have been expanded, each item is once again inspected. 
+If a terminal token follows the cursor, it is moved one token forward and the terminal token is placed into a temporary set to be shifted 
+known, for historical reasons, 
+as the \emph{FIRST} set\footnote{LR(k) parsers make a distinction between FIRST set and FOLLOW sets indicating, respectively, 
+the first terminal tokens that can be recognized in a string of grammar tokens and the sets of terminals that could follow each of the FIRST terminals.} of the current state.
+Because there must be at least one terminal token in the grammar (specifically the end-of-stream token \$) there is at least one token in the FIRST set.
+If only one unique terminal exists in the set, then the state is \emph{deterministic} and hence a $shift$ instruction will be generated and appended to the current string of instructions in the instruction table.
+However, if multiple unique terminals exist in the FIRST set of the state, then the state is a non-deterministic branch state and a $switch$ instruction is generated instead.
+\begin{itemize}
+\item Given that a $shift$ instruction must be generated, \emph{TODO: ...}. Then the entire procedure is repeated until a set of FIRST terminals must once again be shifted.
+\item Given that a $switch$ instruction must be generated, the current state must be duplicated once for every unique terminal in the switch. 
+An edge labeled with the terminal token connects every new state to its source.
+However, every duplicate state must be filtered so that only the rules partaking in a particular branch of the switch are included.
+This is handled by checking all 
+\end{itemize}
+An item is \emph{completed} once the cursor has moved past all remaining tokens on the right hand side of the rule.
+Once either a $shift$ or a $switch$ has been generated, several items in the state may be completed. 
+A special subroutine is responsible for handling these completed items which in turn generates $reduce$ and $delay$ instructions depending on the context.
+In the case of a $shift$ action, the items in the original state is completed whereas, in the case of a $switch$, each of the new states are processed by the routine.\\
+
+\item[$\bullet$] Complete items --- Every time a FIRST set is processed, the generator must test whether all items in the state are complete. 
+In the case of a $shift$ action, the current state is tested and if all items are complete, a $return$ instruction must be generated and all \emph{...(todo)}.
+\end{enumerate}
+
+For example, iterative application of steps 1 and 2 will result in the following state changes
+
+\begin{figure}[!ht]
+\begin{center}
+\parbox{.3\textwidth}{\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow . A C a \$ \quad {(A_1)}\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_1)}\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_2)}\\
+     & A_1 \rightarrow x .\\
+     & B_1 \rightarrow x .\\
+     & B_2 \rightarrow x . z
+     \end{align*}}
+   };
+   \path (-2,2) node (S0n) {0};
+\end{tikzpicture}}
+\parbox{.65\textwidth}{Parsing instructions:\\$shift(x)$}
+\caption{The $shift$ instruction is deduced by stepping over the $x$ terminal.}
+\end{center}
+\end{figure}
+
+\begin{figure}[!ht]
+\begin{center}
+\parbox{.3\textwidth}{\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow A . C a \$ \quad {(A_1)}\\
+     & S_2 \rightarrow B . C b \$ \quad {(B_1)}\\
+     & S_2 \rightarrow B . C b \$ \quad {(B_2)}\\
+     & B_2 \rightarrow x . z
+     \end{align*}}
+   };
+   \path (-2,1.5) node (S0n) {0};
+\end{tikzpicture}}
+\parbox{.65\textwidth}{Parsing instructions:\\$shift(x), delay(A_1, B_1)$}
+\caption{A $delay$ instruction is deduced by completing rules $A_1$ and $B_1$. Take note of rule $B_2$ which cannot be completed due to the remaining terminal $z$.}
+\end{center}
+\end{figure}
+
+\begin{figure}[!ht]
+\begin{center}
+\parbox{.3\textwidth}{\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S)
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow A . C a \$ \quad\\
+     & S_2 \rightarrow B . C b \$ \quad\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_2)}\\
+     & B_2 \rightarrow x . z\\	
+     & C_1 \rightarrow . y\\
+     & C_2 \rightarrow . C y
+     \end{align*}}
+   };
+   \path (-2,2) node (S0n) {0};
+\end{tikzpicture}}
+\parbox{.65\textwidth}{Parsing instructions:\\$shift(x), delay(A_1, B_1), switch(y \mapsto 1, z \mapsto 2)$}
+\caption{A $switch$ instruction is deduced by stepping over terminals $y$ and $z$.}
+\end{center}
+\end{figure}
+
+\begin{figure}[!ht]
+\begin{center}
+\parbox{.65\textwidth}{\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S0) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow A . C a \$\\
+     & S_2 \rightarrow B . C b \$\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_2)}\\
+     & B_2 \rightarrow x . z\\	
+     & C_1 \rightarrow . y\\
+     & C_2 \rightarrow . C y
+     \end{align*}}
+   };
+   \path (-2,2) node (S0n) {0};
+
+   \path (5,2.5) node[draw,shape=rectangle] (S1) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow A . C a \$\\
+     & S_2 \rightarrow B . C b \$\\
+     & C_1 \rightarrow . y\\
+     & C_2 \rightarrow . C y
+     \end{align*}}
+   };
+   \path (3.5,4) node (S1n) {1};
+
+   \path (5.3,-2) node[draw,shape=rectangle] (S2) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_2 \rightarrow . B C b \$ \quad {(B_2)}\\
+     & B_2 \rightarrow x . z
+     \end{align*}}
+   };
+   \path (3.3,-1.1) node (S2n) {2};
+
+   %todo: edge lables and arrows
+   \draw (S0) -- (S1) (S0) -- (S2);
+
+\end{tikzpicture}}
+\caption{Generating new states for the switch instruction.}
+\end{center}
+\end{figure}
+
+\begin{figure}[!ht]
+\begin{center}
+\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S1) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_1 \rightarrow A . C a \$ \quad {(C_1)}\\
+     & S_1 \rightarrow A . C a \$ \quad {(C_2)}\\
+     & S_2 \rightarrow B . C b \$ \quad {(C_1)}\\
+     & S_2 \rightarrow B . C b \$ \quad {(C_2)}\\
+     & C_1 \rightarrow . y\\
+     & C_2 \rightarrow . C y \quad {(C_1)}\\
+     & C_2 \rightarrow . C y \quad {(C_2)}
+     \end{align*}}
+   };
+   \path (-2,2.3) node (S1n) {1};
+\end{tikzpicture}
+\caption{Expanding state 1}
+\end{center}
+\end{figure}
+
+\begin{figure}[!ht]
+\begin{center}
+\parbox{.3\textwidth}{\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S2) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_2 \rightarrow B . C b \$ \quad {(B_2)}\\
+     & B_2 \rightarrow x z .
+     \end{align*}}
+   };
+   \path (-2,0.9) node (S2n) {2};
+\end{tikzpicture}}
+\parbox{.65\textwidth}{Parsing instructions:\\$shift(z)$}
+\caption{A $shift$ instruction is deduced by stepping over the $z$ terminal.}
+\end{center}
+\end{figure}
+
+At this point our instruction string will contain a shift, delay and a switch instructions.
+\begin{enumerate}
+\item[0] $shift(x), delay, switch(y \mapsto 1, z \mapsto 2)$\\
+\item $shift(y), switch(a \mapsto ?, b \mapsto ?, y \mapsto ?)$\\
+\item $shift(z), shift(y), switch(b \mapsto ?, y \mapsto ?)$
+\end{enumerate}
+
+In the final section of this paper we will discuss the limitations of this algorithm and discuss some proposals for extension that take into account the full set of context free grammars. 
 
 (TODO: We will also show that parsers built using this technique already includes the entire class of LR(1) grammars)
 
 \section*{Results}
+...
+While it is tempting to classify an LD parser according to the number of operations per input token, we should also take into account the class of grammar being translated.
+
+For simplicity only the recognition pass is considered here as the translation pass corresponds closely to that of any lr(0) parser.
+
+Analyzing the performance of each instruction individually is relatively easy. 
+For this reason it is easiest to characterize the performance of LD parsers according to the number of parsing instructions an LD parser may take.
+The table bellow lists the performance of each instruction according to its algorithmic worst-case complexity.
+
+$shift$: constant
+$switch$: linear in the number of arguments (todo)
+$accept$/$return$: constant (todo)
+$goto$: linear in the number of arguments (todo)
+$delay$: constant
+$reduce$: constant
+$resolve$: constant
+
+Given an input stream of $n$ tokens, every token in the input stream may only be tested once during the recognition pass.
+Hence, the number of $shift$ and $switch$ instructions executed by the parse will certainly be linear in $n$.
+
+\emph{HOLD ON: THE STUFF BELOW ABOUT LR(k) having a decideable depth seems unlikely!!!!!!!!!!!!! LR(k) may still include recursive rules)
+
+The number of $reduce$ instructions is intuitively related to both the number input tokens and the complexity of the given grammar specification.
+However, since $reduce$ instructions do not take any lookahead into account we believe that $reduce$ instructions will have the same worst-case asymptotic
+performance regardless of the class of grammar parsed. (
+The performance can be related to $n$, the number of input tokens and $j$, the maximum depth of the final parse tree.
+Let us first consider cases in which the grammar falls withing the class $LR(k)$ for some fixed $k$.
+Then in the worst case the number of reduce instructions will be $(j - 1) \mul n + 1$ since every token will be involved in at most $j$ productions, one of which has to be the root node of the parse tree.
+For any such grammar that is known to have a bounded $k$, computation for a maximal value of $j$ is decidable and hence most analyses of $LR(k)$ algorithms simply include $j$ in the constant term 
+of the grammar to approximate the performance of the algorithm as $O(n)$.
+However, if the the grammar is unambiguous, but $k$ is unbounded, but $j$ is not so easily determined. 
+What we can prove is that $j$ will be bounded above by the product of $n$ and some constant.
+Hence reductions will be in the order $O(n^2)$. 
+
+From a practical point of view we expect that sane grammars will not include many redundant \emph{alternative wording?} productions, especially inside recursive rules.
+Based on this assumption, it is our estimation that a typical average case performance of $o(n)$ is far more likely for most applications. (An argument that could most likely be applied to GLR and Earley parsers as well).
+%Let us suppose for \emph{posterity?} sake that a grammar specification will not include redundant \emph{alternative wording?} productions. 
+%In other words every grammar rule has at least two tokens on the right-hand side. Then it is clear that $n log(n)$ would bound the number of $reduce$ instructions.
+%%%%%%%%%%
+
+Following the same argumentation, similar upper bounds can be found for each of .... \emph{todo}
+Pairs of $delay$ and $resolve$ or $delay$ and $ignore$ instructions behave somewhat similarly to the $reduce$ instruction. 
+Note that $delay$ actions have been designed to be cheap in both the recognition and translation passes. 
+%Hence, in relation to GLR they should take only a minimal number of cycles?
+
+$goto$'s on the other hand is dependent on the lookahead size.
+
+
+It is easy to see that an LD parser will never backtrack.
+
 
 \section*{Conclusions}
 
+Delayed actions show promise for .
+
 \section*{Future work}
 
-The implementation of the parser interpreter still promises many potential improvements. 
+There remains a large amount of theoretical and practical work to be done.
+Our main concern is increasing the generality of LD parsing in order to handle a larger class of context-free grammars, possibly including all ambiguous grammars. 
+We note that it is possible to annotate delay actions with the possible reductions that could be performed. 
+Generating new rule number for various combinations of these rules may allow us to generate parse trees with ambiguities.
+
+It has been established that LD parsing instruction set is capable of handling a wide variety of unambiguous context-free grammars but will not accept the special case where lookahead is required within nested recursion.
+It is put forward that the instruction set could be extended, possibly by adding an alternative to the $return$ instruction.
+
+Knuth showed that determining whether a context-free grammar is ambiguous is undecidable in general\cite{knuth65}. 
+This implies that certain concequences must be taken into account for our work. First, since we construct parsers .
+Second, we suspect that this problem may lead to infinite growth in the state graph during the construction algorithm if certain ambiguous grammars are used.
+In order to prevent this effect, we may simply specify a limiting depth for the generator when generating $switch$ actions.
+Even so, the problem warrants further study.
+
+We have given a rough analysis of the performance of an LD parser. 
+Benchmarks must be set up in order to test the performance of generated parsers in comparison to other parser generators.
+While algorithmic analyses provides a usefull metric to test the scalability of parsing algorithms, the constant term tends to have a large effect on the performance in practice and 
+complex effects on performance such as memory latency and branch prediction may be missed by over-simplified mathematical models.
+The simplicity of our approach emboldens us to explore efficiency of generated parsers.
+The presented construction algorithm provides many opportunities for further optimizations in the generated bitcode.
+Another possibility that could provide an additional speed-up is direct conversion to machine code using existing optimizing compilers that already employ sophisticated static analyses.
+
+Finally, there are additional engineering concerns that also need to be resolved before LD parsing can be considered for industrial use.
+In particular we have omitted error recovery from our work thus far.
 
 \emph{ %BUSY HERE
 (TODO)\\
@@ -1046,6 +1416,12 @@ Parallelization / pipelined implementations?\\
 Application to other grammar classes (E.g. ambiguous context-free and context-sensitive grammars)\\
 Perhaps applications to other dynamic programming problems? How does it relate to automatic memoization in functional programming? (I.e. Memoization is an automatically deduced top-down dynamic programming mechanism. Is it possible to find bottom-up/hybrid solutions automatically?)
 }
+
+\emph{TODO: Check...} Finally, much of the research into parsing algorithms occured in the 70's and 80's. Today's hardware has different performance characteristics which is still in a phase of rapid change. 
+In order to take advantage of modern hardware, now and in the future, we may need to re-evaluate the classical algorithms using different performance metrics.
+
+\section*{Acknowledgements}
+I would like to thank Prof. Derrick Kourie and Prof. Bruce Watson of the University of Pretoria for their insightful suggestions and patient support during the development of this work.
 
 \bibliographystyle{plain}
 \bibliography{delayedcase}
