@@ -105,14 +105,13 @@
 
 \title{A case for delayed reductions in left-to-right parsing of context-free grammars}
 \author{\textbf{Supervisors:} Derrick Kourie, Bruce Watson\\
-\textbf{Author:} Rehno Lindeque (23123576)\\
-}
+\textbf{Author:} Rehno Lindeque (23123576)}
 
 \maketitle
 
 \begin{abstract}
 In this paper we suggest the use of delayed actions for generalized parsing of unambiguous context-free grammars. 
-Our conftention is that delayed reductions in a left-to-right parser describes the nature of the parsing process in a more light-weight, intuitive manner than existing techniques.
+Our contention is that delayed reductions in a left-to-right parser describes the nature of the parsing process in a more light-weight, intuitive manner than existing techniques.
 It is also hoped that this might lead to simpler, more efficient parsers without sacrificing the generality of our grammars.
 This work is therefore intended as preparatory material for further research in this area.
 To this end we develop a set of tools for studying and developing the semantics of delayed parsing actions.
@@ -129,45 +128,72 @@ Finally we discuss the remaining problems with this technique and possible appro
 \subsection{Top-down vs Bottom-up parsing}
 
 The subject of parsing is widely regarded to be a well-understood topic in computer science having been exposed to many years of study.
-Two general strategies have been identified known as top-down and bottom-up parsing. 
-Most parsing algorithms can be categorized into one of these two methodologies although a few hybrid examples do exist.\\
-
-In \cite{knuth65} Knuth developed a body of theoretical knowledge around the concept of ``left-to-right parsers with rightmost derivation'' known in short as \emph{LR parsers}. 
-Over time many variants [citation needed: LALR, SLR, etc.] and optimizations [citation needed: Very Fast LR Parsing, Thomas J. Pennell] of LR parsing has been suggested.
-When classifying a grammar for LR parsing we usually refer to an \emph{LR(k)} grammar where $k$ indicates some fixed \emph{lookahead} value,
-allowing the parser to look forward in the stream of input tokens when deciding on the next action to take.
-However, the traditional approach to generating LR parsers with $k > 2$ has proven prohibitively difficult causing most tools that employ LR or LALR techniques to restrict lookahead to very small values.
-In \emph{todo} to this these tools remain some of the most effective parser generators where efficiency of the generated parser is concerned.\\
+Two general strategies have been identified known as top-down and bottom-up parsing.\\
 
 Top-down parsing techniques operate by deriving productions near the root of the grammar before attempting to derive productions further down the tree.
-Bottom-up techniques on the other hand attempt to deduce the leaf nodes of the parse tree first before moving up to the root nodes.
-
-Top-down parsers are often programmed by hand using a methodology called ``recursive descent'' parsing [citation needed].
+Such top-down parsers are often programmed by hand using a methodology called ``recursive descent'' parsing [citation needed].
 A procedure is created for every production in the grammar and child productions are derived by calling their procedures in a recursive fashion.
-This methodology makes a familiar analogy to LL parsing easy.
+This may be done in a speculative manner, backtracking where necessary, or by using some form of \emph{lookahead} mechanism where lexical tokens are investigated in advance before a node is created.\\
 
-Recursive ascent parsing, considered to be an analog to recursive descent for LR parsers, ... Recursive ascent parsers %\cite{13326, 47909, 770849}.
-once again procedures corresponding to productions are called recursively. 
-However, this style explores the parse tree in a bottom-up manner.
-Every procedure returns the deduced production to its caller, allowing the caller to decide 
-Indeed recursive ascent has been advocated as a learning exercise or teaching LR parsing. %\cite{13326, 47909, 770849}.
-Our parsing strategy, although somewhat different from a technical point of view, \emph{TODO: presents, illustrates, demonstrates, gives rise to a comparison with} some commonality with recursive ascent parsing.
+Bottom-up techniques on the other hand attempt to deduce the leaf nodes of the parse tree first before moving up to the root nodes. 
+Theoretically this gives such a parser access to more contextual information [citation needed] as the derivation of productions are delayed until their contents has already been recognized.
+However, a top-down parser may not always have enough information to derive a production even when the contents of such a production has been recognized. 
+Certain context-free grammars require tokens following the the production to be recognized before it can decide whether the choice is really correct inside the context in which it is recognized
+\footnote{This concept should not be confused with the class of grammars known as \emph{context-sensitive} grammars which may have more than one token on the left-hand side of production rules.}.
+For this reason top-down parsers also typically employ lookahead in making such deductions.\\
+
+In \cite{knuth65} Knuth developed a body of theoretical knowledge around the concept of ``left-to-right parsers with rightmost derivation'' known in short as \emph{LR parsers}. 
+LR parsing captures the idea of directed, bottom-up parsing with a concrete algorithm.
+Over time many variants of LR parsing, such as LALR [citation] and SLR [citation], have been developed as well as some optimizations [citation needed: Very Fast LR Parsing, Thomas J. Pennell].
+When classifying a grammar for LR parsing we usually refer to an \emph{LR(k)} grammar where $k$ indicates some fixed \emph{lookahead} value, allowing the parser to look forward in the stream of input tokens when deciding on the next action to take.
+However, the traditional approach to generating LR parsers with $k > 2$ has proven prohibitively difficult, leading most tools that employ LR or LALR techniques to restrict lookahead to very small values
+\footnote{Typical lookahead used in LR(k) or LALR(k) parser generators has \emph{k = 1} or \emph{k = 2}.}.
+Despite this limitation these tools produce some of the most efficient parsers and remain a popular choice amongst users.\\
+
+LL parsers or ``left-to-right parsers with left-most derivation'' are the directed top-down analog to LR parsers.
+Similar to \emph{LR(k)} grammars, a grammar may also be classified in the class \emph{LL(k)}. 
+Once again \emph{k} indicates the minimum number of tokens that an LL parser would need to look ahead in order to recognize all the strings generated by this grammar.\\
+
+Recursive ascent parsing, considered to be an analog to recursive descent parsing for bottom-up parsing %\cite{13326, 47909, 770849}.
+In a similar manner procedures corresponding to productions are called recursively and every procedure returns the production it deduced to its caller, allowing the caller to decide on its next action.
+Recursive ascent has been advocated as a learning exercise or teaching LR parsing. %\cite{13326, 47909, 770849}.
+The parsing strategy presented in this paper, although somewhat different from a technical point of view, shows some commonality with recursive ascent parsing.
 
 \emph{(TODO)\\ %BUSY HERE
-LL parsing\\
-LR parsing \cite{knuth65}\\
 Recursive ascent parsers \cite{13326, 47909, 770849} }
 
 \subsection{Generalized parsing approaches}
 
+Several techniques have shown promise in delivering more general parsing approaches.
+Specifically context-free languages, which include grammars with unbounded lookahead and ambiguous grammars, has seen plenty of research.
+In order to 
+
+Generalized parsing techniques are most often used in the domain of natural language processing while programming language tools have traditionally stuck to LR, LALR and certain LL parsing tools.
+It has been shown that the strings produced by any LR(k) grammar can be recognized using an LR(1) grammar [todo: citation].
+However, as \cite{Parr95lland} suggests, a distinction could be made between \emph{language recognition} and \emph{language translation}. 
+Indeed, many parser generators will simplify the output by removing nodes which do not. 
+This it itself lends support for the idea powerful parsing tools can make use of simpler grammars which also result in simpler parse trees.
+
+... the parser must \emph{look ahead} into the input stream in order to derive the correct rule to reduce.
+
+It has been claimed in the past that computer languages should be designed for weaker parsers as this also makes it easier to read and understand for a human.
+We will not challenge this idea in our paper although we do suggest that further research should be conducted in order to verify such a claim.
 
 \emph{(TODO)\\ %BUSY HERE
 Motivation: Translation versus recognition (why k $>$ 1 lookahead is needed) \cite{Parr95lland}}
 
-Several techniques have shown promise in ....(presenting) more generalized parsing models
+
+In theory LR(k) parser has been shown to be more powerful than their equivalent LL(k) parsers because an LR parser uses more context information to derive reductions.
+For this reason larger values of k is often desirable in practical LL parsers.
+However, LL(k) parsing, long believed to be intractable for large values of k, has shown large improvements in performance through the use of deterministic finite automata. 
+Additionally LL parsing has proven amenable to extension for larger classes of grammars than plain LR and LARL parsers can handle.
+The popular ANTLR parser makes use of these techniques and has introduced two variants: LL(*) [citation needed]\cite{} and more recently Predicated-LL \cite{} [citation needed].
+s
+Despite significant improvements in the efficiency of GLR parsers, they are still regarded as slow in comparison to their traditional LALR counterparts despite equivalent algorithmic performance.
+This is usually attributed to the cost of maintaining the stack-structured graph that gives such a parser the capability to merge different branches. [citation needed?]
 
 
-... the parser must \emph{look ahead} into the input stream in order to derive the correct rule to reduce.
+
 
 \emph{(TODO)\\ %BUSY HERE
 Generalized Parsing Techniques \cite{Thurston07}\\
@@ -189,14 +215,7 @@ Parsing with continuations
 }
 
 
-In theory LR(k) parser has been shown to be more powerful than their equivalent LL(k) parsers because an LR parser uses more context information to derive reductions.
-For this reason larger values of k is often desirable in practical LL parsers.
-However, LL(k) parsing, long believed to be intractable for large values of k, has shown large improvements in performance through the use of deterministic finite automata. 
-Additionally LL parsing has proven amenable to extension for larger classes of grammars than plain LR and LARL parsers can handle.
-The popular ANTLR parser makes use of these techniques and has introduced two variants: LL(*) [citation needed]\cite{} and more recently Predicated-LL \cite{} [citation needed].
-s
-Despite significant improvements in the efficiency of GLR parsers, they are still regarded as slow in comparison to their traditional LALR counterparts despite equivalent algorithmic performance.
-This is usually attributed to the cost of maintaining the stack-structured graph that gives such a parser the capability to merge different branches. [citation needed?]
+
 
 \subsection{Overview}
 \emph{(TODO: Expand + look at phrasing)}
@@ -1018,7 +1037,6 @@ In much the same manner as any LR parser, the translation pass can simply iterat
 Because every grammar rule is a concrete instance of a grammar production, a parse tree can be constructed deterministically without reference to the lex stream 
 other than to copy lexical tokens or their underlying data to the new parse tree structure.
 Alternatively one could also construct this tree in a top-down fashion by simply iterating through the rules in reverse.
-
 \begin{figure}[!ht]
 \begin{center}
 \begin{gcl}
@@ -1343,7 +1361,7 @@ $resolve$: constant
 Given an input stream of $n$ tokens, every token in the input stream may only be tested once during the recognition pass.
 Hence, the number of $shift$ and $switch$ instructions executed by the parse will certainly be linear in $n$.
 
-\emph{HOLD ON: THE STUFF BELOW ABOUT LR(k) having a decideable depth seems unlikely!!!!!!!!!!!!! LR(k) may still include recursive rules)
+\emph{HOLD ON: THE STUFF BELOW ABOUT LR(k) having a decideable depth seems unlikely!!!!!!!!!!!!! LR(k) may still include recursive rules)}
 
 The number of $reduce$ instructions is intuitively related to both the number input tokens and the complexity of the given grammar specification.
 However, since $reduce$ instructions do not take any lookahead into account we believe that $reduce$ instructions will have the same worst-case asymptotic
