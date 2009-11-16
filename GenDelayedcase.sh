@@ -1,3 +1,4 @@
+rm delayedcase.aux
 latex delayedcase
 bibtex delayedcase
 latex delayedcase
