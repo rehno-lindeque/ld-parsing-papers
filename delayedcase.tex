@@ -244,7 +244,7 @@ The first is a \emph{recognition pass} with the additional constraint that rules
 The identifying rule tokens are placed into a temporary \emph{rules buffer} that grows in a stack-like manner, but also supports constant-time random-access operations.
 In the second pass---the \emph{translation pass}---the sequence of recognized production rules are used to build the final parse tree in a similar a manner to a LR parser, but without any recognition steps or lookahead.
 
-By separating these two aspects into distinct passes, the recognition pass is allowed the convenience of identifying the right hand sides of production rules in a more flexible order. 
+By separating these two aspects into distinct passes, the recognition pass is allowed the convenience of identifying the right-hand sides of production rules in a more flexible order. 
 However, the translation pass requires the rules buffer it is given to be correctly ordered when building the parse tree.
 For this purpose, the mechanism used to reorder rules relies on placeholder tokens in the rules buffer representing unresolved production rules.
 Whenever the parser must deduce a rule that cannot be fully determined, a placeholder token is appended to the rules buffer in its place. 
@@ -295,7 +295,7 @@ Operational semantics for the following instructions are discussed below, follow
 \item \texttt{reduce(rule)}
 \end{itemize}
 
-\subsubsection{The `shift' action}
+\subsubsection{The `shift' operation}
 \texttt{shift(terminaltoken)}\\
 The $shift$ action is used to step over input tokens deterministicly. 
 There are only two options: Either the token matches the parameter given to the $shift$ operation, or the parser is put into an error state.
@@ -308,7 +308,7 @@ There are only two options: Either the token matches the parameter given to the 
 \infer{parserstate \mapsto error}{input_i = a & actions_j = shift(b)} \tag{Def 1.2}
 \end{equation}\\
 
-\subsubsection{The `switch' action}
+\subsubsection{The `switch' operation}
 \texttt{switch(terminaltoken $\mapsto$ state, \textellipsis)}\\
 The $switch$ instruction is used to recognize input tokens nondeterministicly.
 The set of parameters given to the $switch$ operation can be viewed as an associative map of key-value pairs where a terminal token maps to a parse state or, in other words, an index into the generated parser code.
@@ -330,7 +330,7 @@ However, a distinction is made between these two actions as a matter of convenie
 We view $switch$ operations as the primary recognition mechanism of the parser, because they involve a non-trivial choice.
 By contrast, $shift$ operations do not make any significant contribution to the internal state of the parser other than to catch syntax errors.
 	
-\subsubsection{The `reduce' action}
+\subsubsection{The `reduce' operation}
 \texttt{reduce(rule)}\\
 The parameter given to the $reduce$ instruction is an index into a list of all rules in the given grammar where every rule is in the form \texttt{nonterminaltoken $\rightarrow$ terminaltoken \textellipsis}
 A production in a grammar may be reduced from any number of different sequences of terminal tokens, however a rule recognizes only one possible sequence of terminal tokens.
@@ -504,7 +504,7 @@ Some additional free variables is needed for use by the extended instruction set
 \item $lasttarget$ is a index into the instruction stream recorded by the $switch$ operation as described bellow.
 \end{itemize}
 
-\subsubsection{The `delay' action}
+\subsubsection{The `delay' operation}
 \texttt{delay}\\
 The delay action adds a placeholder token called $ignore$ to the output rules which may be replaced later.
 In addition the index of the placeholder is pushed onto the stack of delays.
@@ -513,7 +513,7 @@ Note that the value of $ignore$ should be reserved so that it will not conflict 
 \infer{delays_m, m, j, outputrules_k, k \mapsto j, m+1, j+1, ignore, k+1}{actions_j = delay} \tag{Def 1.6}
 \end{equation}\\
 
-\subsubsection{The `resolve' action}
+\subsubsection{The `resolve' operation}
 \texttt{resolve(rule)}\\
 The resolve action is similar to the reduce action, but instead of immediately pushing a reduction rule onto the output stack it instead replaces the placeholder token previously pushed by a delay action.
 It may also push the special token $ignore$ meaning that the output rules should remain unchanged and no reduction is necessary. 
@@ -525,7 +525,7 @@ Since the resolve action will pop the index of this placeholder token from the s
 The pair of actions, `resolve' and `delay', works together in order to implement \emph{delayed reductions}. 
 It is easy to see that the action $delay$ immediately followed by the action $resolve(r)$ is identical to our original action $reduce(r)$ and could be used as a replacement\footnote{We've chosen to keep the original reduce action because, in practice, programming language grammars often require very few lookaheads.}.
 
-\subsubsection{A modification of the `switch' action}
+\subsubsection{A modification of the `switch' operation}
 In order for the nexed two operations to work correctly we must also modify our original $switch$ action to record the state from which we've come.
 The current parser state index will be pushed onto a call stack to be returned to later. 
 However, the $switch$ also sets one additional variable, $lasttarget$ which always contains the very last state that any $switch$ instruction jumped to.
@@ -539,7 +539,7 @@ However error checking remains the same as before.
 \infer{parsestate \mapsto error}{input_i \notin A & actions_j = switch(A)} \tag{Def 1.9}
 \end{equation}
 
-\subsubsection{The `return' action}
+\subsubsection{The `return' operation}
 A $return$ action is needed in order to return to the state from which the previous $switch(...)$ action jumped. 
 From a technical point of view, this allows a parser constructor to merge branches together, thus avoiding an exponential growth in the number of possible states. 
 Indeed this is a necessary condition for parsers that must handle recursive grammars.
@@ -553,16 +553,20 @@ Indeed this is a necessary condition for parsers that must handle recursive gram
 One final operation is needed to complete the instruction set.
 When a cyclic set of rules has been recognized, then the $delay$ operations triggered during each iteration of the cycle must also be resolved in a recursive manner.
 The only way to do this is by using the $return$ operation to revisit each of these states.
-However, a some kind of history is needed to retain knowledge of all of the lookahead that has been recognized.
+However, some kind of history is needed to retain knowledge of all of the lookahead that has been recognized.
 
-A $goto$ operation can be described as type of `trampoline'.
-Depending on the last value assigned to $lasttarget$ by a $switch$ operation, $goto$ will direct the parser to jump to a new state (without changing the value of $lasttarget$). 
-This variable $lasttarget$ is representative of all the relevant branches that that the parser needed to follow in order to recognize the needed lookahead up to this point.
+A $goto$ operation can be described as type of `trampoline'. 
+Immediately after returning from another state, the interpreter may encounter a $goto$ instruction which will cause the interpreter to jump to a different state.
+Depending on the last value assigned to $lasttarget$ by a $switch$ operation, $goto$ will direct the parser to some associated state. 
+The variable $lasttarget$ is representative of all the relevant branches that that the parser needed to follow in order to recognize the needed lookahead up to this point.
 In other words the last nondeterministic choice in a sequence of nondeterministic choices will be used to represent the entire sequence of choices.
 
 \begin{equation}
 \infer{j \mapsto getvalue(A, lasttarget)}{lasttarget \in A & actions_j = goto(A)} \tag{Def 1.11}
 \end{equation}
+
+The $goto$ operation does not otherwise affect the callstack or the the value of $lasttarget$. 
+If no other $switch$ instruction is encountered then the next $return$ will continue with the previous state on the callstack.
 
 \subsection{Traces}
 To see how the delay/resolve pair can be used to look ahead in the input stream we must investigate several different forms of production rules.
@@ -582,28 +586,28 @@ G_1 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.7\textwidth}{This is a simple grammar requiring a fixed size lookahead in order to output one of the two production rules, $A_1$ or $B_1$.}
+\parbox{.6\textwidth}{This is a simple grammar requiring a fixed size lookahead in order to output one of the two production rules, $A_1$ or $B_1$.}
 \end{tabular}
 
 Suppose that this grammar was to be parsed by an $LR(k)$ parser with a sufficiently large lookahead $k$. 
 We could write down all the possible traces for this parser using our `shift', `reduce' and `switch' actions while ignoring any possible lookahead actions that must take place as follows:
 
-\parbox{.25\textwidth}{\begin{align*}
+{\small\parbox{.25\textwidth}{\begin{align*}
 &traces(G_1) \equiv \\
 \{ & \langle shift(x), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), switch(b), shift(\$), reduce(S_2) \rangle \}
-\end{align*}}
+\end{align*}}}
 
 Next we will exploit the fact that ordering of shift and switch actions relative to reduce actions is not enforced in our parsing methodology. This because a parse tree is only constructed during the second pass over the output reduction rules.
 This really implies that any recognition action directly followed by a reduce action may swap places. 
 Hence a trace $\langle shift(...), reduce(...) \rangle$ may be rewritten as $\langle reduce(...), shift(...) \rangle$ and similarly for switch statements $\langle switch(...), reduce(...) \rangle$ may be rewritten as $\langle reduce(...), switch(...) \rangle$.
 We apply this rule selectively to the above trace in order to produce an equivalent trace:
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_1) \equiv \\
 \{ & \langle shift(x), switch(a), reduce(A_1), shift(\$), reduce(S_1) \rangle, \\
    & \langle shift(x), switch(b), reduce(B_1), shift(\$), reduce(S_2) \rangle \}
-\end{align*}}
+\end{align*}}}
 
 Take note that this equivalent trace requires no lookahead whatsoever\footnote{Note that an $LR(1)$ parser is effectively allowed to perform one such swap for every $reduce$ operation.}!
 Because the ordering of recognition and reduction operations have been relaxed many instances where a fixed lookahead would have been required by classical algorithms no longer apply.
@@ -617,24 +621,24 @@ G_2 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow x b \$
 \end{align*}}
-\parbox{.7\textwidth}{In this grammar the rule $A_1$ may be output, or the possible reduction could be ignored if $b$ is in the lookahead.}
+\parbox{.6\textwidth}{In this grammar the rule $A_1$ may be output, or the possible reduction could be ignored if $b$ is in the lookahead.}
 \end{tabular}
 
 This grammar produces a similar trace as before, but with the first reduction omitted in the rule $S_2$.
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_2) \equiv \\
 \{ & \langle shift(x), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), switch(b), shift(\$), reduce(S_2) \rangle \}
-\end{align*}}
+\end{align*}}}
 
 Once again the need for lookahead can be circumvented by simply shuffling the order of operations.
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_2) \equiv \\
 \{ & \langle shift(x), switch(a), reduce(A_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), switch(b), shift(\$), reduce(S_2) \rangle \}
-\end{align*}}
+\end{align*}}}
 
 %%%%%%%%%%%%% Example 3: Disjoint reductions that require lookahead
 \subsubsection{Disjoint reductions that require lookahead}
@@ -649,25 +653,25 @@ G_3 \equiv \quad & A_1 \rightarrow x y\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow C B \$
 \end{align*}}
-\parbox{.7\textwidth}{The rules $A_1$ and $C_1$, $B_1$ in this grammar are partially disjoint.}
+\parbox{.6\textwidth}{The rules $A_1$ and $C_1$, $B_1$ in this grammar are partially disjoint.}
 \end{tabular}
 
 Once the lexical token $x$ has been seen, the parser must first look ahead 2 tokens before 
 deciding whether the string $x y$ belongs to $A_1$ or to $C_1$ followed by $B_1$.
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_3) \equiv \\
 \{ & \langle shift(x), shift(y), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(C_1), shift(y), switch(b), reduce(B_1), shift(\$), reduce(S_2) \rangle \}
-\end{align*}}
+\end{align*}}}
 
 This trace may also be reordered without any need for lookahead.
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_3) \equiv \\
 \{ & \langle shift(x), shift(y), switch(a), reduce(A_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), shift(y), switch(b), reduce(C_1), reduce(B_1), shift(\$), reduce(S_2) \rangle \}
-\end{align*}}
+\end{align*}}}
 
 %%%%%%%%%%%%% Example 4: Right recursive reductions with outer lookahead
 \subsubsection{Look ahead outside a right recursive cycle}
@@ -684,17 +688,17 @@ G_4 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.7\textwidth}{The rules $A_2$ and $B_2$ in this grammar are both in a form of \emph{tail recursion}. 
+\parbox{.6\textwidth}{The rules $A_2$ and $B_2$ in this grammar are both in a form of \emph{tail recursion}. 
 We will also call this \emph{right recursion} in this paper in order to emphasize the contrast with \emph{left recursion}.}
 \end{tabular}
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_4) \equiv \\
 \{ & \langle shift(x), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), shift(x), reduce(A_1), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle, \textellipsis \\
    & \langle shift(x), reduce(B_1), switch(b), reduce(S_2) \rangle,\\
    & \langle shift(x), shift(x), reduce(B_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle, \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 While we could attempt to shuffle the operations in these traces so that reductions are only made after the tokens $a$ and $b$ have been recognized, 
 additional effort would be required on the part of the parser to remember the number and nature of reductions to apply. 
@@ -704,13 +708,13 @@ Suffice to say, reductions could be recognized in a reversed (top-down) order bu
 However our $delay/resolve$ mechanism will allow us to do exactly this by placing placeholders in the output stream and later replacing them in right-to-left order using $resolve$ actions.
 Hence, the equivalent trace can be written as follows:
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_4) \equiv \\
 \{ & \langle shift(x), delay, switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), shift(x), delay, delay, switch(a), resolve(A_2), resolve(A_1), shift(\$), reduce(S_1) \rangle, \textellipsis \\
    & \langle shift(x), delay, switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
    & \langle shift(x), shift(x), delay, delay, switch(b), resolve(B_2), resolve(B_1), shift(\$), reduce(S_2) \rangle, \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 Notice the reverse ordering of the actions $\langle resolve(A_2), resolve(A_1) \rangle$ in contrast to the original $\langle reduce(A_1), reduce(A_2) \rangle$.
 A left recursive rule with outer lookahead may be resolved in much the same manner as a right recursive rule.
@@ -727,27 +731,27 @@ G_5 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.7\textwidth}{The rules $A_2$ and $B_2$ are both partially disjoint and recursive. One is left recursive in this case while the other is right recursive and the combination
+\parbox{.6\textwidth}{The rules $A_2$ and $B_2$ are both partially disjoint and recursive. One is left recursive in this case while the other is right recursive and the combination
 requires a look ahead outside of the cycle.}
 \end{tabular}
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_5) \equiv \\
 \{ & \langle shift(x), delay, switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), shift(x), delay, delay, switch(a), resolve(A_2), resolve(A_1), shift(\$), reduce(S_1) \rangle, \textellipsis \\
    & \langle shift(x), delay, switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
    & \langle shift(x), shift(x), delay, delay, switch(b), resolve(B_2), resolve(B_1), shift(\$), reduce(S_2) \rangle, \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 An equivalent trace with delays can be written using delay/resolve actions as follows:
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_5) \equiv \\
 \{ & \langle shift(x), delay, switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), shift(x), delay, delay, switch(a), resolve(A_2), resolve(A_1), shift(\$), reduce(S_1) \rangle, \textellipsis \\
    & \langle shift(x), delay, switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
    & \langle shift(x), shift(x), delay, delay, switch(b), resolve(B_2), resolve(B_1), shift(\$), reduce(S_2) \rangle, \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 %%%%%%%%%%%%% Example: 
 %\subsubsection{}
@@ -761,7 +765,7 @@ An equivalent trace with delays can be written using delay/resolve actions as fo
 %                 & C_3 \rightarrow B C b\\
 %                 & S_1 \rightarrow C \$
 %\end{align*}}
-%\parbox{.7\textwidth}{sfd}
+%\parbox{.6\textwidth}{sfd}
 %\end{tabular}
 %
 %\parbox{.3\textwidth}{\begin{align*}
@@ -807,7 +811,7 @@ An equivalent trace with delays can be written using delay/resolve actions as fo
 %                 & C_3 \rightarrow C B b\\
 %                 & S_1 \rightarrow C \$
 %\end{align*}}
-%\parbox{.7\textwidth}{sfd}
+%\parbox{.6\textwidth}{sfd}
 %\end{tabular}
 %
 %\parbox{.3\textwidth}{\begin{align*}
@@ -848,7 +852,7 @@ An equivalent trace with delays can be written using delay/resolve actions as fo
 %                 & C_3 \rightarrow C B b\\
 %                 & S_1 \rightarrow C \$
 %\end{align*}}
-%\parbox{.7\textwidth}{sfd}
+%\parbox{.6\textwidth}{sfd}
 %\end{tabular}
 %
 %\parbox{.3\textwidth}{\begin{align*}
@@ -900,22 +904,22 @@ G_9 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A C a \$\\
                  & S_2 \rightarrow B C b \$
 \end{align*}}
-\parbox{.7\textwidth}{In this grammar the rules $A_1$ and $B_1$ are not recursive, however their lookahead includes a cycle in $C$. 
+\parbox{.6\textwidth}{In this grammar the rules $A_1$ and $B_1$ are not recursive, however their lookahead includes a cycle in $C$. 
 This type of grammar also requires a delayed reductions to resolve the choice of $A_1$  $B_1$.}
 \end{tabular}
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_9) \equiv \\
 \{ & \langle shift(x), reduce(A_1), shift(y), reduce(C_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), shift(y), reduce(C_1), switch(b), shift(\$), reduce(S_2) \rangle,\\
    & \langle shift(x), reduce(A_1), shift(y), reduce(C_1), switch(y), reduce(C_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), shift(y), reduce(C_1), switch(y), reduce(C_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
    & \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 The equivalent trace with delays can be written as follows:
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_9) \equiv \\
 %\{ & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
 %   & \langle shift(x), delay(A,B), shift(y), reduce(C_1), switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
@@ -926,7 +930,7 @@ The equivalent trace with delays can be written as follows:
    & \langle shift(x), delay, shift(y), reduce(C_1), switch(y), reduce(C_2), switch(a), resolve(A), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
    & \langle shift(x), delay, shift(y), reduce(C_1), switch(y), reduce(C_2), switch(b), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
    & \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 %S1 { A{x} C1{y} a }
 %S2 { B{x} C1{y} b }
@@ -948,22 +952,22 @@ G_{10} \equiv \quad & A_1 \rightarrow x\\
                   & S_1 \rightarrow A C \$\\
                   & S_2 \rightarrow B D \$
 \end{align*}}
-\parbox{.7\textwidth}{Sometimes the lookahead itself will be contained inside a cycle.
+\parbox{.6\textwidth}{Sometimes the lookahead itself will be contained inside a cycle.
 In this example the preceeding rules $A_1$ and $B_1$ depend on a lookahead within the recursive rules $C_2$ and $D_2$.}
 \end{tabular}
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_{10}) \equiv \\
 \{ & \langle shift(x), reduce(A_1), switch(a), reduce(C_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), switch(b), reduce(D_1), shift(\$), reduce(S_2) \rangle,\\
    & \langle shift(x), reduce(A_1), switch(y), switch(a), reduce(C_1), reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), switch(y), switch(b), reduce(D_1), reduce(D_2), shift(\$), reduce(S_2) \rangle,\\
    & \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 The equivalent trace with delays can be written as follows:
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{.3\textwidth}{\begin{align*}
 &traces(G_{10}) \equiv \\
 % \{ & \langle shift(x), delay(A, B), switch(a), reduce(C_1), resolve(A), shift(\$), reduce(S_1) \rangle,\\
 %    & \langle shift(x), delay(A, B), switch(b), reduce(D_1), resolve(B), shift(\$), reduce(S_2) \rangle,\\
@@ -971,10 +975,10 @@ The equivalent trace with delays can be written as follows:
 %    & \langle shift(x), delay(A, B), switch(y), switch(b), reduce(D_1), reduce(D_2), resolve(B), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
  \{ & \langle shift(x), delay, switch(a), reduce(C_1), resolve(A), shift(\$), reduce(S_1) \rangle,\\
     & \langle shift(x), delay, switch(b), reduce(D_1), resolve(B), shift(\$), reduce(S_2) \rangle,\\
-    & \langle shift(x), delay, switch(y), switch(a), reduce(C_1), reduce(C_2), resolve(A_1), shift(\$), \\&\qquad reduce(S_1) \rangle,\\
-    & \langle shift(x), delay, switch(y), switch(b), reduce(D_1), reduce(D_2), resolve(B_1), shift(\$), \\&\qquad reduce(S_2) \rangle,\\
+    & \langle shift(x), delay, switch(y), switch(a), reduce(C_1), reduce(C_2), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+    & \langle shift(x), delay, switch(y), switch(b), reduce(D_1), reduce(D_2), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
     & \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 %S1 { A{x} C1{a} $ }
 %S2 { B{x} D1{b} $ }
@@ -998,48 +1002,48 @@ G_{11} \equiv \quad & A_1 \rightarrow x\\
                   & S_1 \rightarrow A a \$\\
                   & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.7\textwidth}{One pathological case to take into account is a grammar where multiple nested recursion takes place in a single rule yet both branches of tree require lookahead outside of the cycles. In this case notice that $A$ and $B$ are both 
+\parbox{.6\textwidth}{One pathological case to take into account is a grammar where multiple nested recursion takes place in a single rule yet both branches of tree require lookahead outside of the cycles. In this case notice that $A$ and $B$ are both 
 cycles, yet within these also generate additional cycles using $C$ and $D$. Example strings include $xyyyyyyyyxyyyya$ and $xyyxyxyb$ corresponding to productions for $A$ and $B$ respectively.
 For convenience we could write these strings using Kleene closures as $(x(y^*))^+a$ and $(x(y^*))^+b$ where $+$ indicates one or more repetitions and $*$ indicates zero or more repetitions.}
 \end{tabular}
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{\textwidth}{\begin{align*}
 &traces(G_{11}) \equiv \\
 \{ & \langle shift(x), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), switch(b), shift(\$), reduce(S_2) \rangle,\\
    & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(x), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(x), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
-   & \textellipsis
-   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), switch(y), reduce(A_2), switch(x), reduce(A_1), switch(a), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), switch(y), reduce(B_2), switch(x), reduce(B_1), switch(b), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), switch(y), reduce(A_2), switch(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), switch(y), reduce(B_2), switch(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(x), reduce(A_2), switch(a), \\ & \qquad shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(x), reduce(B_2), switch(b), \\ & \qquad shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(x), reduce(A_1), switch(y), \\ & \qquad reduce(C_1), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(x), reduce(B_1), switch(y), \\ & \qquad reduce(D_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
+   & \textellipsis \\
+   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), switch(y), reduce(A_2), switch(x), reduce(A_1), \\ & \qquad switch(a), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), switch(y), reduce(B_2), switch(x), reduce(B_1), \\ & \qquad switch(b), shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), reduce(A_1), switch(y), reduce(C_1), switch(y), reduce(A_2), switch(x), reduce(A_1), \\ & \qquad switch(y), reduce(C_1), reduce(A_2), switch(a), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), reduce(B_1), switch(y), reduce(D_1), switch(y), reduce(B_2), switch(x), reduce(B_1), \\ & \qquad switch(y), reduce(D_1), reduce(B_2), switch(b), shift(\$), reduce(S_2) \rangle,\\
    & \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 The equivalent trace with delays can be written as follows:
 
-\parbox{.3\textwidth}{\begin{align*}
+{\small\parbox{\textwidth}{\begin{align*}
 &traces(G_{11}) \equiv \\
 \{ & \langle shift(x), delay, switch(a), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
    & \langle shift(x), delay, switch(b), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, delay, switch(a), resolve(A_2), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, delay, switch(b), resolve(B_2), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, reduce(A_2), switch(x), delay, switch(a), resolve(A_2), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, delay, switch(x), delay, switch(y), switch(b), resolve(D_1), resolve(B_2), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, reduce(A_2), switch(x), delay, switch(y), delay, reduce(A_2), switch(a), resolve(C_1), resolve(A_1), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, reduce(B_2), switch(x), delay, switch(y), delay, reduce(B_2), switch(b), resolve(D_1), resolve(B_1), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
-   & \textellipsis
-   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(A_2), switch(x), reduce(A_1), switch(a), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(B_2), switch(x), reduce(B_1), switch(b), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(A_2), switch(x), reduce(A_1), switch(y), reduce(C_1), reduce(A_2), switch(a), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
-   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(B_2), switch(x), reduce(B_1), switch(y), reduce(D_1), reduce(B_2), switch(b), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, delay, switch(a), resolve(A_2), resolve(C_1), resolve(A_1), \\ & \qquad shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, delay, switch(b), resolve(B_2), resolve(D_1), resolve(B_1), \\ & \qquad shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, reduce(A_2), switch(x), delay, switch(a), resolve(A_2), \\ & \qquad resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, delay, switch(x), delay, switch(y), switch(b), resolve(D_1), \\ & \qquad resolve(B_2), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, reduce(A_2), switch(x), delay, switch(y), delay, reduce(A_2), \\ & \qquad switch(a), resolve(C_1), resolve(A_1), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, reduce(B_2), switch(x), delay, switch(y), delay, reduce(B_2), \\ & \qquad switch(b), resolve(D_1), resolve(B_1), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
+   & \textellipsis \\
+   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(A_2), switch(x), reduce(A_1), switch(a), \\ & \qquad resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(B_2), switch(x), reduce(B_1), switch(b), \\ & \qquad resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(A_2), switch(x), reduce(A_1), switch(y), \\ & \qquad reduce(C_1), reduce(A_2), switch(a), resolve(C_1), resolve(A_1), shift(\$), reduce(S_1) \rangle,\\
+   & \langle shift(x), delay, switch(y), delay, switch(y), reduce(B_2), switch(x), reduce(B_1), switch(y), \\ & \qquad reduce(D_1), reduce(B_2), switch(b), resolve(D_1), resolve(B_1), shift(\$), reduce(S_2) \rangle,\\
    & \textellipsis \}
-\end{align*}}
+\end{align*}}}
 
 This particular trace has special significance to our work as it is a counter-example that cannot be generated given our existing instruction set.
 In the conclusion of this paper we will look at a possible approach to resolving this problem in future work.
@@ -1063,7 +1067,7 @@ Hence we will say that the parser is capable of \emph{translating} to a grammar 
 Both strings and traces can have infinite nested `substrings' or `subtraces' inside their main traces.
 By using a naive\emph{[todo:i]} algorithm, the generator will get `stuck' inside a subtrace and never explore the remainder of the grammar.
 An procedure for expanding the traces of the grammar in a `breadth-first' manner such that all branches of the grammar can make progress is needed.
-In other words, is there a function $E(G, n)$ producing a prefix-closed set of traces of the grammar $G$ with $n \in \mathbb{N}$ such that the following relations hold?
+In other words, is there a function $E(G, n)$ producing a set of traces of the grammar $G$ with $n \in \mathbb{N}$ such that the following relations hold?
 \begin{equation} E(G, n) \sqsubseteq E(G, n+1) \sqsubseteq \top_{G} \end{equation} and \begin{equation} lim_{n \to \infty} E(G,n) = \top_{G} \end{equation}
 
 Here $\sqsubseteq$ is defined as a total ordering on sets of traces such that $A \sqsubset B \quad \Longleftrightarrow \quad A \subset B$ and $B$ expands the traces as demonstrated bellow.
@@ -1083,14 +1087,14 @@ G \equiv \quad & A_1 \rightarrow x\\
 
 The set of trace can be expanded as follows:\\
 First add the empty trace to the set. Take all the starting rules, in this case, $S_1$ and $S_2$.
-Take all nonterminals on the right hand side and expand them once using all possible rules. 
+Take all nonterminals on the right-hand side and expand them once using all possible rules. 
 
 If some rules are incomplete, then continue in the next iteration. This guarantees that the entire grammar can be enumerated in a single loop such that $lim_{n \to \infty} ET(G,n) = \top_{G}$.
 
 $ET(G, n+1) \equiv ET(G, n) \cup Complete(IT(G, n))$
 $Complete(G, n) \equiv $
 
-\begin{align*}
+{\small\begin{align*}
 ET(G, 0) & = \{ \langle \rangle \}\\
 IT(G, 0) & = \{\\
 \quad & \langle \mathbf{Expand(S_1)} \rangle,\\
@@ -1113,8 +1117,8 @@ IT(G, 2) & = \{ \\
 \quad & <shift(x), reduce(B_1), shift(y), \mathbf{Expand(D_1)}, reduce(D_2), shift(\$), reduce(S_1)>,\\
 \quad & <shift(x), reduce(B_1), shift(y), \mathbf{Expand(D_2)}, reduce(D_2), shift(\$), reduce(S_1)>\\
  \}\\
- \textellipsis\\
-\end{align*}
+ \textellipsis
+\end{align*}}
 
 As discussed in the previous section, an LD parser recognizes production rules left-to-right, bottom-up manner. 
 Assuming that no shuffling of instructions take place, this type of parser is equivalent to an \emph{LR(0)} parser.
@@ -1227,7 +1231,7 @@ Finally, certain opcode values are reserved for the remaining instructions which
 \begin{itemize}
 \item A special token called $ignore$ represents the $delay$ instruction and is also used as the placeholder token that is appended to the rules buffer by the $delay$ action.
 \item The $switch$ opcode corresponds to the instruction by the same name. It is coded as the string\\\\
-      \texttt{switch, length, (terminal, target\_state)\*}\\\\
+      \texttt{switch, length, (terminal, target\_state)}$^\texttt{*}$\\\\
       where $length$ is the number of pairs that map terminal tokens to their target states.
 \item $return$ is the simple opcode corresponding to the same instruction but takes no arguments
 \item $goto$ is the opcode corresponding to the instruction coded as\\\\
@@ -1280,7 +1284,7 @@ The initial state will contain the rules corresponding the root production of th
 \end{center}
 \end{figure}
 
-The period on the right hand side of each rule is a cursor indicating the progress of the rule in a particular parser state.
+The period on the right-hand side of each rule is a cursor indicating the progress of the rule in a particular parser state.
 For example, given an item $W_1 \rightarrow x . y$, this would indicate that the terminal $x$ has been recognized, and only $y$ remains to be parsed in order to recognize this rule.\\
 
 Once an initial state node has been constructed the main loop of the algorithm takes over. 
@@ -1334,7 +1338,7 @@ An edge labeled with the terminal token connects every new state to its source.
 However, every duplicate state must be filtered so that only the rules partaking in a particular branch of the switch are included.
 This is handled by checking all 
 \end{itemize}
-An item is \emph{completed} once the cursor has moved past all remaining tokens on the right hand side of the rule.
+An item is \emph{completed} once the cursor has moved past all remaining tokens on the right-hand side of the rule.
 Once either a $shift$ or a $switch$ has been generated, several items in the state may be completed. 
 A special subroutine is responsible for handling these completed items which in turn generates $reduce$ and $delay$ instructions depending on the context.
 In the case of a $shift$ action, the items in the original state is completed whereas, in the case of a $switch$, each of the new states are processed by the routine.\\
@@ -1501,52 +1505,64 @@ In the final section of this paper we will discuss the limitations of this algor
 
 \section*{Results}
 
-While it is tempting to classify an LD parser performance according to the number of operations per input token, we should also take into account the class of the grammar that the parser represents.
-For simplicity only the recognition pass is considered here as the translation pass, when building the parse tree in a similar to that of any $LR(0)$ parser, will execute in $O(n)$ \emph{todo: O symbol??} time.
+It is tempting to classify an LD parser performance according to the number of operations per input token.
+However, the class of the grammar that the parser represents should also be taken into account for comparison with other parsers.
+For simplicity only the recognition pass is considered here. 
+The translation pass builds a parse tree in much the same way as any $LR(0)$ parser, therefore the expected worstcase is $O(n)$.
 
-Analyzing the performance of each instruction individually is relatively easy. 
+Analyzing the performance of each instruction individually is relatively straightforward. 
 For this reason it is easiest to characterize the performance of LD parsers according to the number of parsing instructions an LD parser may take.
-The table bellow lists the performance of each instruction according to its algorithmic worst-case complexity.
+The table bellow lists the performance of each individual operation according to its arguments.
 
-$shift$: constant
-$switch$: linear in the number of arguments (todo)
-$accept$/$return$: constant (todo)
-$goto$: linear in the number of arguments (todo)
-$delay$: constant
-$reduce$: constant
-$resolve$: constant
+\begin{table}[!ht]\begin{center}
+  \begin{tabular}{|l|l|}
+  \hline
+  \textbf{Operation} & \textbf{Time} \\
+  \hline
+  $shift$            & constant \\ \hline
+  $switch$           & linear in the number of arguments \\ \hline
+  $accept$/$return$  & constant \\ \hline
+  $goto$             & linear in the number of arguments \\ \hline
+  $delay$            & constant \\ \hline
+  $reduce$           & constant \\ \hline
+  $resolve$          & constant \\
+  \hline
+  \end{tabular}
+\caption{Performance of individual parsing operations.}
+\end{center}\end{table}
+
+For the $shift$ and $goto$ operations that exhibit linear time it is possible to encode their arguments in a flattened binary tree.
+However, the overhead of the additional operations and memory access is likely to dominate performance in practice since the number of arguments are expected to be few.
+Since the original LR algorithms used a large lookup table to determine every action, it appears to be common practice to simply ignore the time for these simple recognition operations.
 
 Given an input stream of $n$ tokens, every token in the input stream may only be tested once during the recognition pass.
-Hence, the number of $shift$ and $switch$ instructions executed by the parse will certainly be linear in $n$.
+Hence, the number of $shift$ and $switch$ operations executed by the parse will certainly be linear in $n$.
 
-\emph{HOLD ON: THE STUFF BELOW ABOUT LR(k) having a decideable depth seems unlikely!!!!!!!!!!!!! LR(k) may still include recursive rules)}
+The number of reductions that take place seem intuitively related to both the number input tokens and the complexity of the given grammar specification.
+However, since $reduce$ instructions do not take any lookahead into account $reduce$ instructions should have the same worst-case asymptotic performance regardless of the class of grammar used.
+The performance can be related to $n$, the number of input tokens, and $j$, the maximum depth of the final parse tree.
 
-The number of $reduce$ instructions is intuitively related to both the number input tokens and the complexity of the given grammar specification.
-However, since $reduce$ instructions do not take any lookahead into account we believe that $reduce$ instructions will have the same worst-case asymptotic
-performance regardless of the class of grammar parsed.
-The performance can be related to $n$, the number of input tokens and $j$, the maximum depth of the final parse tree.
-Let us first consider cases in which the grammar falls withing the class $LR(k)$ for some fixed $k$.
-Then in the worst case the number of reduce instructions will be $(j - 1) \cdot n + 1$ since every token will be involved in at most $j$ productions, one of which has to be the root node of the parse tree.
-For any such grammar that is known to have a bounded $k$, computation for a maximal value of $j$ is decidable and hence most analyses of $LR(k)$ algorithms simply include $j$ in the constant term 
-of the grammar to approximate the performance of the algorithm as $O(n)$.
-However, if the the grammar is unambiguous, but $k$ is unbounded, but $j$ is not so easily determined. 
-What we can prove is that $j$ will be bounded above by the product of $n$ and some constant.
-Hence reductions will be in the order $O(n^2)$. 
+Consider cases in which the grammar falls withing the class $LR(k)$ for some fixed $k$.
+In the worst case the number of $reduce$ operations will be $(j - 1) \cdot n + 1$ since every token will be involved in at most $j$ productions, one of which has to be the root node of the parse tree.
+When the grammar is unambiguous the number of rules with only nonterminals on the right-hand side will necessarily be constant.
+Since every rule that is not one of these must consume at least one terminal, most analyses simply reduce $j$ to a constant term.
+Therefore, for all unambiguous grammars the number of $reduce$ operations is roughly linear with respect to the number of input tokens.
 
-From a practical point of view we expect that sane grammars will not include many redundant \emph{alternative wording?} productions, especially inside recursive rules.
-Based on this assumption, it is our estimation that a typical average case performance of $o(n)$ is far more likely for most applications. (An argument that could most likely be applied to GLR and Earley parsers as well).
-%Let us suppose for \emph{posterity?} sake that a grammar specification will not include redundant \emph{alternative wording?} productions. 
-%In other words every production rule has at least two tokens on the right-hand side. Then it is clear that $n log(n)$ would bound the number of $reduce$ instructions.
-%%%%%%%%%%
+%From a practical point of view we expect that sane grammars will not include many redundant \emph{alternative wording?} productions, especially inside recursive rules.
+%Based on this assumption, it is our estimation that a typical average case performance of $o(n)$ is far more likely for most applications. (An argument that could most likely be applied to GLR and Earley parsers as well).
 
-Following the same argumentation, similar upper bounds can be found for each of .... \emph{todo}
-Pairs of $delay$ and $resolve$ or $delay$ and $ignore$ instructions behave somewhat similarly to the $reduce$ instruction. 
-Note that $delay$ actions have been designed to be cheap in both the recognition and translation passes. 
-%Hence, in relation to GLR they should take only a minimal number of cycles?
+The pair of actions $delay$ and $resolve$ should exhibit similar performance to $reduce$.
+We have already seen that the equivalent trace using delays may split a $reduce$ action into a single pair of $delay$ and $resolve$ actions.
+The only difference here is that some delay actions may be resolved using an $ignore$ which does not correspond to any reduce action.
+An $ignore$ token may be generated through a $resolve$ whenever two or more rules are evaluated simultaneously with lookahead. 
+Using the same argumentation showing that $reduce$ is $O(n)$ with respect to the number of input tokens it can be seen that the number of possible reductions in any one of these rules is linear.
+Assuming that the number of these simultaneous rules will be constant\footnote{An assertion that may require further investigation.}, the number of $ignore$ tokens will also be linear.
 
-$goto$'s on the other hand is dependent on the lookahead size.
+Finally, determining the upper limit for $return$ and $goto$ operations is trivial once one realizes that both operations must correspond to a preceding $switch$ operation. 
+It follows that $return$ and $goto$ are both linear in $n$.\\
 
-It is easy to see that an LD parser will never backtrack.
+All of the above arguments seem to indicate that LD parsers can be constructed that will perform in linear---or at least near-linear---time for those unambiguous grammars that can be parsed using the instruction set.
+Our initial preformance analysis appears favourable in comparison to the most efficient generalized parsing algorithms.
 
 \section*{Conclusions}
 
@@ -1611,7 +1627,7 @@ In particular we have omitted error recovery, semantic actions, precedence rules
 %Proof is needed for the absence of exponential growth of states in the generated parser\\
 %Parallelization / pipelined implementations?\\
 %Application to other grammar classes (E.g. ambiguous context-free and context-sensitive grammars)\\
-w%}
+%}
 
 \section*{Acknowledgements}
 I would like to thank Prof. Derrick Kourie and Prof. Bruce Watson of the University of Pretoria for their insightful suggestions and patient support during the development of this work.
