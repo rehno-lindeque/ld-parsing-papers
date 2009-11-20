@@ -127,7 +127,7 @@ The subject of parsing is widely regarded to be a well-understood topic in compu
 As such, two general strategies have been identified known as top-down and bottom-up parsing.
 
 Top-down parsing techniques operate by deriving productions near the root of the grammar before attempting to derive productions further down the tree.
-Such top-down parsers are often programmed by hand using a methodology called ``recursive descent'' parsing.
+Such top-down parsers are often programmed by hand using a methodology called `recursive descent' parsing.
 A procedure is created for every production in the grammar and child productions are derived by calling their procedures in a recursive fashion.
 This may be done in a speculative manner, backtracking where necessary, or by using some form of \emph{lookahead} mechanism where lexical tokens are investigated in advance before a node is created.
 
@@ -152,19 +152,19 @@ Once again $k$ indicates the minimum number of tokens that an LL parser would ne
 Recursive ascent parsing is considered to be an analog to recursive descent for bottom-up parsing \cite{47909}.
 In a similar manner procedures corresponding to productions are called recursively and every procedure returns the production it deduced to its caller, allowing the caller to decide on its next action.
 Recursive ascent has been advocated as a learning exercise for teaching LR parsing \cite{770849}.
-The parsing strategy presented in this paper, although somewhat different from a technical point of view, has some commonality with recursive ascent parsing.
+The parsing strategy presented in this paper, although somewhat different from a technical point of view, shares some commonality with recursive ascent parsing.
 
 \subsection{Generalized parsing approaches}
 
 Several techniques have shown promise in delivering more general parsing approaches.
 Specifically context-free languages, which include grammars with unbounded lookahead and ambiguous grammars, has seen plenty of research.
-Unfortunately determining whether a context-free grammar is ambiguous, or even whether it has some unspecified upperbound of $k$ in $LR(k)$ is undecidable in general\cite{knuth65}.
+Unfortunately determining whether a context-free grammar is ambiguous, or even whether it has some unspecified upperbound of $k$ in $LR(k)$ is undecidable in general \cite{knuth65}.
 
 Generalized parsing techniques are most often used in the domain of natural language processing while programming language tools have traditionally stuck to LR, LALR and certain LL parsing tools.
-It has been shown that the strings produced by any LR(k) grammar (for some fixed k) can be recognized using an LR(1) grammar\cite{knuth65}.
+It has been shown that the strings produced by any LR(k) grammar (for some fixed k) can be recognized using an LR(1) grammar \cite{knuth65}.
 However, as is suggested in \cite{Parr95lland}, a distinction can be made between \emph{language recognition} and \emph{language translation}.
 Indeed, tool writers are usually more interested in processing the contents of a string rather than merely checking whether such a string matches the given grammar.
-Some parser generators will even simplify the parse tree output by removing nodes that contain only a single child. [citation needed]
+Some parser generators will even simplify the parse tree output by removing nodes that contain only a single child. %[citation needed]
 Furthermore, many parsers allow the user to specify additional precedence rules because writing a correct $LR(k)$ grammar can be difficult for some languages.
 
 It has also been claimed that computer languages should be designed for weaker parsers as this makes it easier to read and understand for a human reader.
@@ -180,7 +180,7 @@ However, the two best known algorithms that have achieved full generality for co
 Despite significant improvements in the efficiency of both Earley and GLR parsers \cite{1146810, Mcpeak04elkhound:a}, they are still regarded as slow in comparison to their traditional LALR counterparts despite having similar asymptotic performance.
 In GLR this is usually attributed to the cost of maintaining the stack-structured graph that gives the parser the capability to merge different branches together \cite{Mcpeak04elkhound:a}.
 
-Other previous work similar to ours include \cite{1287949, Marc80, 991520, 146993, DBLP:conf/wia/GalvezSF06}. %[\emph{todo}].
+Other previous work similar to ours include \cite{991520, Marc80, 1287949, 146993, DBLP:conf/wia/GalvezSF06}. %[\emph{todo}].
 
 %\emph{(TODO)\\ %BUSY HERE
 %Generalized Parsing Techniques \cite{Thurston07}\\
@@ -234,10 +234,10 @@ Two types of tokens are used to define a grammar:
 \item \emph{Terminal tokens} correspond to leaf nodes in the syntax tree. Notationally, terminal tokens are left uncapitalized. A special terminal, $\$$, is used to represent the unique `end-of-stream' token that indicates that no more tokens remain in the input stream.
 \item \emph{Nonterminal tokens} correspond to non-leaf nodes in the syntax tree. Nonterminals are capitalized in order to distinguish them from terminals.
 \end{itemize}
-The rules in the grammar will be a set of strings in the form $A_1 \rightarrow x B \textellipsis$ where some finite number of terminals and nonterminals on the right-hand side are \emph{translated} to the nonterminal on the left-hand side.
-At times we may also refer to the idea that the nonterminal on the left-hand side generates all the strings in the language that can be matched to the right-hand side.
+The rules in the grammar will be a set of strings in the form $A_1 \rightarrow x B \textellipsis$ where some finite number of terminals and nonterminals on the right-hand side are \emph{recognized} and then \emph{translated} to the nonterminal on the left-hand side.
+At times we may also refer to the original idea of a grammar, that the nonterminal on the left-hand side generates the strings in the language that can be matched to the right-hand side.
 A \emph{production} is the set of all rules that translate to the same nonterminal on their left-hand sides.
-In our work, whenever a nonterminal token is annotated with a numeric subscript, such as $A_1$ above, it identifies the token as the nonterminal recognized from a specific rule.\\
+In our work, whenever a nonterminal token is annotated with a numeric subscript, such as $A_1$ above, it identifies the token as the nonterminal recognized using a specific rule.\\
 
 Our basic strategy for parsing strings of lexical tokens proceeds in two passes.
 The first is a \emph{recognition pass} with the additional constraint that rules are recorded as their matching strings are recognized.
@@ -248,7 +248,7 @@ By separating these two aspects into distinct passes, the recognition pass is al
 However, the translation pass requires the rules buffer it is given to be correctly ordered when building the parse tree.
 For this purpose, the mechanism used to reorder rules relies on placeholder tokens in the rules buffer representing unresolved production rules.
 Whenever the parser must deduce a rule that cannot be fully determined, a placeholder token is appended to the rules buffer in its place. 
-Once the rule can be resolved, the placeholder token is replaced by the correct rule token.
+Once the \emph{delayed rule} can be resolved, the placeholder token is replaced by the correct rule token.
 In order to keep track of placeholders their indexes are recorded in a separate stack, allowing the parser to return to these tokens later on and replace them using random-access writes.\\
 
 In effect, placeholders are used in order to delay reductions in an LR-like parser until some unspecified lookahead has been recognized.
@@ -257,9 +257,10 @@ However, it is not completely unrestricted.
 The following conditions specify certain constraints by which the recognition pass must abide.
 
 \begin{itemize}
-\item As rules are recognized they are placed in the rules buffer in a left-to-right order. This corresponds with a bottom-up parsing strategy since production rules that are closer to the leaf nodes in the parse tree will normally be recognized before their parent rules are recognized.
-\item Delayed rules may only be resolved in a right-to-left order, corresponding with the top-down strategy of parsing since delayed rules near the root of the tree must be resolved before 
-rules near the leaf nodes can be resolved. 
+\item As rules are recognized they are placed in the rules buffer in a left-to-right order. 
+This corresponds with a bottom-up parsing strategy since production rules that are closer to the leaf nodes in the parse tree will normally be recognized before their parent rules are recognized.
+\item Delayed rules may only be resolved in a right-to-left order, corresponding with the top-down strategy of parsing. Rules near the root of the tree must be resolved before 
+the delayed rules near the leaf nodes can be resolved. 
 It is worth noting that, although the unresolved rules will only be resolved in a right-to-left order, rules may be added to the unresolved stack at any time.
 Intuitively the right-to-left rule resolution loop is nested inside the main left-to-right recognition loop, to be evaluated whenever the last delayed rule's lookahead has been completed.
 \end{itemize}
@@ -272,8 +273,8 @@ The operation of a parser constructed as an interpreter for the given set of ins
 The following free variables will be used to represent the state of the interpreter during execution:
 
 \begin{itemize}
-\item $input_{[0, input.length)}$ is an array of input tokens of length $input.length$ returned by a lexer.
-\item $i$ is an index into the array of input tokens representing the current position of the parser in the stream during the recognition pass such that $input_i$ is the token currently being tested.
+\item $input$ is an array of input tokens of length $input.length$ returned by a lexer.
+\item $i$ is an index into $input$ representing the current position of the parser in the stream during the recognition pass such that $input_i$ is the token currently being matched.
 This index will never be decreased and need only increase in increments of 1.
 \item $actions$ is a sequence of instructions representing the encoded parser similar to the source code that is output by parser generators. 
 This array is automatically generated by a separate parser construction algorithm.
@@ -297,7 +298,7 @@ Operational semantics for the following instructions are discussed below, follow
 
 \subsubsection{The `shift' operation}
 \texttt{shift(terminaltoken)}\\
-The $shift$ action is used to step over input tokens deterministicly. 
+The $shift$ operation is used to step over input tokens deterministicly. 
 There are only two options: Either the token matches the parameter given to the $shift$ operation, or the parser is put into an error state.
 
 \begin{equation}
@@ -313,7 +314,7 @@ There are only two options: Either the token matches the parameter given to the 
 The $switch$ instruction is used to recognize input tokens nondeterministicly.
 The set of parameters given to the $switch$ operation can be viewed as an associative map of key-value pairs where a terminal token maps to a parse state or, in other words, an index into the generated parser code.
 If a terminal token on the input stream is contained in the map then the $switch$ operation will cause the parser to jump to the new state similar to how switch statements behave in many programming languages.
-If the input terminal is not recognized by the $switch$ action, then the parser is placed in the $error$ state. 
+If the input terminal is not recognized by the $switch$ operation, then the parser is placed in the $error$ state. 
 In the definition below the function $getvalue$ returns the state index value corresponding to the terminal token given as the key.
 
 \begin{equation}
@@ -332,9 +333,9 @@ By contrast, $shift$ operations do not make any significant contribution to the 
 	
 \subsubsection{The `reduce' operation}
 \texttt{reduce(rule)}\\
-The parameter given to the $reduce$ instruction is an index into a list of all rules in the given grammar where every rule is in the form \texttt{nonterminaltoken $\rightarrow$ terminaltoken \textellipsis}
-A production in a grammar may be reduced from any number of different sequences of terminal tokens, however a rule recognizes only one possible sequence of terminal tokens.
-In other words, given some rule both the left and right side of the reduction can be determined (although identifiers must still be stored).
+The parameter given to the $reduce$ instruction is a \emph{rule token} representing some reference into the list of all production rules in the given grammar.
+A production in a grammar may be reduced from any number of different sequences of terminal tokens. However, a rule recognizes only one possible sequence of terminal tokens.
+In other words, given some rule token both the left-hand side and the right-hand side of the rule can be determined (although underlying data like identifier name and literals must be stored separately).
 For this reason we use rule numbers internally rather than using productions directly.
 
 \begin{equation}
@@ -345,6 +346,8 @@ For this reason we use rule numbers internally rather than using productions dir
 
 Since LR(0) grammars requires no lookahead they can be parsed directly using only recognition and reduction actions.
 To see how these rules translate into a familiar language we construct an LR(0) parser for a simple grammar in the guarded command language (GCL) in a similar style to a recursive-ascent parser.
+In these examples the value of certain state variable will not be represented directly and are considered to be implicit.
+These include $actions$, $callstack$, $j$ and $l$.
 
 This simple grammar will be used for illustration, with $S$ representing the starting token.
 
@@ -356,9 +359,9 @@ G \equiv \quad & A_1 \rightarrow a\\
                & S_3 \rightarrow x y \$
 \end{align*}
 
-In order to recognize this grammar we will derive the following sequence of parsing steps:
+In order to recognize a string satisfying this grammar we will derive the following sequence of parsing steps:
 \begin{enumerate}
-\item The first token to be recognized must be $x$. Since the choice of $x$ is predetermined a shift action, $shift(x)$, may be used which also checks for an error in the input stream.
+\item The first token to be recognized must be $x$. Since the choice of $x$ is predetermined a shift operation, $shift(x)$, may be used which also checks for an error in the input stream.
 %\begin{figure}[htbp]
 \begin{center}
 \begin{gcl}
@@ -370,7 +373,7 @@ In order to recognize this grammar we will derive the following sequence of pars
 %\end{figure}
 
 \item Now the set of valid tokens to follow are $\{ a, b, y \}$. 
-Since this recognition involves a choice of $a$, $b$ or $y$ a logical branch occurs in the parser, indicating that a $switch$ action must be employed.
+Since this recognition involves a choice of $a$, $b$ or $y$ a logical branch occurs in the parser, indicating that a $switch$ operation must be employed.
 The choice of branch will place the parser into one of three distinct states. Hence it makes sense to indicate this by constructing a separate procedure for each.
 %\begin{figure}[htbp]
 \begin{center}
@@ -479,24 +482,25 @@ i \becomes 0;
 \FI
 \CORP
 \end{gcl}
-\caption{An LR(0) parser example explained in pseudo code.}
+\caption{An LR(0) parser example represented by pseudo code.}
 \end{center}
 \end{figure}
 
 \end{enumerate}
 
 \subsection{Delayed actions}
-While the three operations discussed provide the necessary tools to recognize any non-recursive LR(0) grammar, they do not provide any manner of looking ahead into the input stream. Furthermore parsers using these instruction will exhibit exponential growth if no explicit `return' action is available.
+While the three operations discussed provide the necessary tools to recognize any non-recursive LR(0) grammar, they do not provide any manner of looking ahead into the input stream.
+Furthermore parsers using these instruction will exhibit exponential growth if no explicit $return$ operation is available.
 Some additional actions are provided to resolve these issues:
 \begin{itemize}
 \item \texttt{delay}
 \item \texttt{resolve(rule)}
 \item \texttt{return}
 \item \texttt{goto(originstate $\mapsto$ targetstate, ...)}
-\item In addition the \texttt{switch} action is slightly modified to use the callstack.
+\item In addition the \texttt{switch} operation is slightly modified to use the callstack.
 \end{itemize}
 
-Some additional free variables is needed for use by the extended instruction set.
+Additional free variables are also needed for use by the extended instruction set.
 
 \begin{itemize}
 \item $delays$ is a stack of indexes into the rules 
@@ -506,7 +510,7 @@ Some additional free variables is needed for use by the extended instruction set
 
 \subsubsection{The `delay' operation}
 \texttt{delay}\\
-The delay action adds a placeholder token called $ignore$ to the output rules which may be replaced later.
+The delay operation adds a placeholder token called $ignore$ to the output rules which may be replaced later.
 In addition the index of the placeholder is pushed onto the stack of delays.
 Note that the value of $ignore$ should be reserved so that it will not conflict with any rule number.
 \begin{equation}
@@ -515,18 +519,19 @@ Note that the value of $ignore$ should be reserved so that it will not conflict 
 
 \subsubsection{The `resolve' operation}
 \texttt{resolve(rule)}\\
-The resolve action is similar to the reduce action, but instead of immediately pushing a reduction rule onto the output stack it instead replaces the placeholder token previously pushed by a delay action.
-It may also push the special token $ignore$ meaning that the output rules should remain unchanged and no reduction is necessary. 
-Since the resolve action will pop the index of this placeholder token from the stack, this delay would not be re-evaluated again.
+The resolve operation is similar to the reduce operation, but instead of immediately pushing a rule token onto the stack of output rules it instead replaces the placeholder token previously pushed by a delay action.
+It may also push the special token $ignore$ which essentially means that the value at this position will remain unchanged and no reduction is necessary. 
+Since the $resolve$ operation will pop the index of this placeholder token from the stack, this delay would not be re-evaluated again. 
+Resolving a placeholder using the $ignore$ token indicates that no reduction took place at this position and the translation pass should simply ignore this particular rule token.
 \begin{equation}
-\infer{l, j, outputrules_{delays_m}, m \mapsto l-1, j+1, ignore, m-1}{actions_j = resolve(r)} \tag{Def 1.7}
+\infer{l, j, outputrules_{delays_m}, m \mapsto l-1, j+1, r, m-1}{actions_j = resolve(r)} \tag{Def 1.7}
 \end{equation}\\
 
 The pair of actions, `resolve' and `delay', works together in order to implement \emph{delayed reductions}. 
-It is easy to see that the action $delay$ immediately followed by the action $resolve(r)$ is identical to our original action $reduce(r)$ and could be used as a replacement\footnote{We've chosen to keep the original reduce action because, in practice, programming language grammars often require very few lookaheads.}.
+It is easy to see that the operation $delay$ immediately followed by the operation $resolve(r)$ is identical to our original operation $reduce(r)$ and could be used as a replacement\footnote{We've chosen to keep the original $reduce$ operation because, in practice, programming language grammars often require very few lookaheads.}.
 
-\subsubsection{A modification of the `switch' operation}
-In order for the nexed two operations to work correctly we must also modify our original $switch$ action to record the state from which we've come.
+\subsubsection{A modification to the `switch' operation}
+In order for the nexed two operations to work correctly we must also modify our original $switch$ operation to record the state from which we've come.
 The current parser state index will be pushed onto a call stack to be returned to later. 
 However, the $switch$ also sets one additional variable, $lasttarget$ which always contains the very last state that any $switch$ instruction jumped to.
 
@@ -540,8 +545,8 @@ However error checking remains the same as before.
 \end{equation}
 
 \subsubsection{The `return' operation}
-A $return$ action is needed in order to return to the state from which the previous $switch(...)$ action jumped. 
-From a technical point of view, this allows a parser constructor to merge branches together, thus avoiding an exponential growth in the number of possible states. 
+A $return$ operation is needed in order to return to the state from which the previous $switch$ operation jumped. 
+From a technical point of view, this allows a parser generator to merge states generated by $switch$ operations to produce new states, thus avoiding an exponential growth in the number of possible states. 
 Indeed this is a necessary condition for parsers that must handle recursive grammars.
 
 \begin{equation}
@@ -558,8 +563,8 @@ However, some kind of history is needed to retain knowledge of all of the lookah
 A $goto$ operation can be described as type of `trampoline'. 
 Immediately after returning from another state, the interpreter may encounter a $goto$ instruction which will cause the interpreter to jump to a different state.
 Depending on the last value assigned to $lasttarget$ by a $switch$ operation, $goto$ will direct the parser to some associated state. 
-The variable $lasttarget$ is representative of all the relevant branches that that the parser needed to follow in order to recognize the needed lookahead up to this point.
-In other words the last nondeterministic choice in a sequence of nondeterministic choices will be used to represent the entire sequence of choices.
+The variable $lasttarget$ is representative of all the relevant $switch$ jumps that that the parser needed to follow in order to recognize the needed lookahead up to this point.
+In other words the last nondeterministic choice in a sequence of dependent nondeterministic choices will be used to represent the entire sequence of choices.
 
 \begin{equation}
 \infer{j \mapsto getvalue(A, lasttarget)}{lasttarget \in A & actions_j = goto(A)} \tag{Def 1.11}
@@ -569,16 +574,19 @@ The $goto$ operation does not otherwise affect the callstack or the the value of
 If no other $switch$ instruction is encountered then the next $return$ will continue with the previous state on the callstack.
 
 \subsection{Traces}
-To see how the delay/resolve pair can be used to look ahead in the input stream we must investigate several different forms of production rules.
-In order to do this we must generate all possible input strings for each form.
-The concept of traces is used to show the actions that the parser must take for every possibility.
-A trace is simply a sequence of actions that the parser must take to recognize a particular instance of a valid input stream for the given grammar.
-The advantage of this approach is that control flow can be ignored in order to focus exclusively on analysing which permutations of parsing actions produce equivalent output.
+To see how the delay/resolve pair can be used to look ahead in the input stream we must investigate several different grammar configurations.
+In order to do this we should generate several possible input strings for each form.
+The concept of traces is used to represent the operations that the parser must perform to correctly translate every possibility.
+A trace is simply a sequence of operations corresponding to one such input string.
+The advantage of this approach is that control flow can be ignored in order to focus exclusively on analysing which permutations of parsing operations produce equivalent output.
 A mechanical method of generating traces is used such that every possibility could be enumerated, although one should be aware that the trace itself may not be finite.\\
 
 %%%%%%%%%%%%% Example 1: Reductions required a fixed size lookahead
 \subsubsection{Reductions requiring a fixed size lookahead}
-\begin{tabular}[t]{cl}
+
+Consider this simple grammar requiring a fixed size lookahead in order to output one of the two production rules, $A_1$ or $B_1$.
+
+\begin{tabular}[t]{l}
 \parbox{.3\textwidth}{
 \begin{align*}
 G_1 \equiv \quad & A_1 \rightarrow x\\
@@ -586,7 +594,7 @@ G_1 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.6\textwidth}{This is a simple grammar requiring a fixed size lookahead in order to output one of the two production rules, $A_1$ or $B_1$.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 Suppose that this grammar was to be parsed by an $LR(k)$ parser with a sufficiently large lookahead $k$. 
@@ -599,7 +607,7 @@ We could write down all the possible traces for this parser using our `shift', `
 \end{align*}}}
 
 Next we will exploit the fact that ordering of shift and switch actions relative to reduce actions is not enforced in our parsing methodology. This because a parse tree is only constructed during the second pass over the output reduction rules.
-This really implies that any recognition action directly followed by a reduce action may swap places. 
+This really implies that any recognition action directly followed by a $reduce$ operation may swap places. 
 Hence a trace $\langle shift(...), reduce(...) \rangle$ may be rewritten as $\langle reduce(...), shift(...) \rangle$ and similarly for switch statements $\langle switch(...), reduce(...) \rangle$ may be rewritten as $\langle reduce(...), switch(...) \rangle$.
 We apply this rule selectively to the above trace in order to produce an equivalent trace:
 
@@ -614,6 +622,8 @@ Because the ordering of recognition and reduction operations have been relaxed m
 
 %%%%%%%%%%%%% Example 2: Optional reduction based on a fixed lookahead
 \subsubsection{Optional reduction requiring a fixed size lookahead}
+In this grammar the rule $A_1$ may be output, or the possible reduction could be ignored if $b$ is in the lookahead.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -621,7 +631,7 @@ G_2 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow x b \$
 \end{align*}}
-\parbox{.6\textwidth}{In this grammar the rule $A_1$ may be output, or the possible reduction could be ignored if $b$ is in the lookahead.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 This grammar produces a similar trace as before, but with the first reduction omitted in the rule $S_2$.
@@ -643,7 +653,10 @@ Once again the need for lookahead can be circumvented by simply shuffling the or
 %%%%%%%%%%%%% Example 3: Disjoint reductions that require lookahead
 \subsubsection{Disjoint reductions that require lookahead}
 Reductions in different branches of a grammar's rules do not necessarily consume the same number of tokens. 
-In addition the prefix of their recognized token strings may be the same, which requires a lookahead to be performed.\\
+In addition the prefix of their recognized token strings may be the same, which requires a lookahead to be performed.
+
+The rules $A_1$ and $C_1$, $B_1$ in this grammar are partially disjoint.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -653,7 +666,7 @@ G_3 \equiv \quad & A_1 \rightarrow x y\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow C B \$
 \end{align*}}
-\parbox{.6\textwidth}{The rules $A_1$ and $C_1$, $B_1$ in this grammar are partially disjoint.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 Once the lexical token $x$ has been seen, the parser must first look ahead 2 tokens before 
@@ -678,6 +691,9 @@ This trace may also be reordered without any need for lookahead.
 In the previous examples, the traces could simply be reordered in order to obviate the need for lookahead, however this is no longer possible in the presence of recursive production rules.
 Such a recursive grammar with a lookahead outside of its cycle no longer falls into the class of LR(k) grammars since k is unbounded in these instances.
 
+The rules $A_2$ and $B_2$ in this grammar are both in a form of \emph{tail recursion}. 
+We will also call this \emph{right recursion} in this paper in order to emphasize the contrast with \emph{left recursion}.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -688,8 +704,7 @@ G_4 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.6\textwidth}{The rules $A_2$ and $B_2$ in this grammar are both in a form of \emph{tail recursion}. 
-We will also call this \emph{right recursion} in this paper in order to emphasize the contrast with \emph{left recursion}.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 {\small\parbox{.3\textwidth}{\begin{align*}
@@ -702,7 +717,7 @@ We will also call this \emph{right recursion} in this paper in order to emphasiz
 
 While we could attempt to shuffle the operations in these traces so that reductions are only made after the tokens $a$ and $b$ have been recognized, 
 additional effort would be required on the part of the parser to remember the number and nature of reductions to apply. 
-By using a $return$ action we can determine which rules should be output, however the rules should also be applied in the correct order to produce the correct trace. 
+By using a $return$ operation we can determine which rules should be output, however the rules should also be applied in the correct order to produce the correct trace. 
 We will discuss this more fully in the following section.
 Suffice to say, reductions could be recognized in a reversed (top-down) order but needs to be output in the original (bottom-up) ordering.
 However our $delay/resolve$ mechanism will allow us to do exactly this by placing placeholders in the output stream and later replacing them in right-to-left order using $resolve$ actions.
@@ -721,6 +736,9 @@ A left recursive rule with outer lookahead may be resolved in much the same mann
 
 %%%%%%%%%%%%% Example 5: Combined left and right recursive grammar
 \subsubsection{Look ahead outside a combined left and right recursive cycle}
+The rules $A_2$ and $B_2$ are both partially disjoint and recursive. One is left recursive in this case while the other is right recursive and the combination
+requires a look ahead outside of the cycle.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -731,8 +749,7 @@ G_5 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A a \$\\
                  & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.6\textwidth}{The rules $A_2$ and $B_2$ are both partially disjoint and recursive. One is left recursive in this case while the other is right recursive and the combination
-requires a look ahead outside of the cycle.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 {\small\parbox{.3\textwidth}{\begin{align*}
@@ -894,6 +911,9 @@ An equivalent trace with delays can be written using delay/resolve actions as fo
 
 %%%%%%%%%%%%% Example 9: Look ahead over a cycle
 \subsubsection{Look ahead over a cycle}
+In this grammar the rules $A_1$ and $B_1$ are not recursive, however their lookahead includes a cycle in $C$. 
+This type of grammar also requires a delayed reductions to resolve the choice of $A_1$  $B_1$.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -904,8 +924,7 @@ G_9 \equiv \quad & A_1 \rightarrow x\\
                  & S_1 \rightarrow A C a \$\\
                  & S_2 \rightarrow B C b \$
 \end{align*}}
-\parbox{.6\textwidth}{In this grammar the rules $A_1$ and $B_1$ are not recursive, however their lookahead includes a cycle in $C$. 
-This type of grammar also requires a delayed reductions to resolve the choice of $A_1$  $B_1$.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 {\small\parbox{.3\textwidth}{\begin{align*}
@@ -940,6 +959,9 @@ The equivalent trace with delays can be written as follows:
 
 %%%%%%%%%%%%% Example 10: Looking ahead into a cycle
 \subsubsection{Look ahead into a cycle}
+Sometimes the lookahead itself will be contained inside a cycle.
+In this example the preceeding rules $A_1$ and $B_1$ depend on a lookahead within the recursive rules $C_2$ and $D_2$.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -952,8 +974,7 @@ G_{10} \equiv \quad & A_1 \rightarrow x\\
                   & S_1 \rightarrow A C \$\\
                   & S_2 \rightarrow B D \$
 \end{align*}}
-\parbox{.6\textwidth}{Sometimes the lookahead itself will be contained inside a cycle.
-In this example the preceeding rules $A_1$ and $B_1$ depend on a lookahead within the recursive rules $C_2$ and $D_2$.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 {\small\parbox{.3\textwidth}{\begin{align*}
@@ -988,6 +1009,10 @@ The equivalent trace with delays can be written as follows:
 
 %%%%%%%%%%%%% Example 11: Looking ahead outside multiple nested cycles
 \subsubsection{Look ahead outside multiple nested cycles}
+One pathological case to take into account is a grammar where multiple nested recursion takes place in a single rule yet both branches of tree require lookahead outside of the cycles. In this case notice that $A$ and $B$ are both 
+cycles, yet within these also generate additional cycles using $C$ and $D$. Example strings include $xyyyyyyyyxyyyya$ and $xyyxyxyb$ corresponding to productions for $A$ and $B$ respectively.
+For convenience we could write these strings using Kleene closures as $(x(y^*))^+a$ and $(x(y^*))^+b$ where $+$ indicates one or more repetitions and $*$ indicates zero or more repetitions.
+
 \begin{tabular}[t]{cl}
 \parbox{.3\textwidth}{
 \begin{align*}
@@ -1002,9 +1027,7 @@ G_{11} \equiv \quad & A_1 \rightarrow x\\
                   & S_1 \rightarrow A a \$\\
                   & S_2 \rightarrow B b \$
 \end{align*}}
-\parbox{.6\textwidth}{One pathological case to take into account is a grammar where multiple nested recursion takes place in a single rule yet both branches of tree require lookahead outside of the cycles. In this case notice that $A$ and $B$ are both 
-cycles, yet within these also generate additional cycles using $C$ and $D$. Example strings include $xyyyyyyyyxyyyya$ and $xyyxyxyb$ corresponding to productions for $A$ and $B$ respectively.
-For convenience we could write these strings using Kleene closures as $(x(y^*))^+a$ and $(x(y^*))^+b$ where $+$ indicates one or more repetitions and $*$ indicates zero or more repetitions.}
+\parbox{.6\textwidth}{}
 \end{tabular}
 
 {\small\parbox{\textwidth}{\begin{align*}
@@ -1232,7 +1255,7 @@ An additional bit flags in highest byte is then used to modify the  $reduce$ ins
 Finally, certain opcode values are reserved for the remaining instructions which also include additional arguments.
 
 \begin{itemize}
-\item A special token called $ignore$ represents the $delay$ instruction and is also used as the placeholder token that is appended to the rules buffer by the $delay$ action.
+\item A special token called $ignore$ represents the $delay$ instruction and is also used as the placeholder token that is appended to the rules buffer by the $delay$ operation.
 \item The $switch$ opcode corresponds to the instruction by the same name. It is coded as the string\\\\
       \texttt{switch, length, (terminal, target\_state)}$^\texttt{*}$\\\\
       where $length$ is the number of pairs that map terminal tokens to their target states.
@@ -1294,7 +1317,7 @@ The period on the right-hand side of each rule is the cursor indicating the prog
 For example, given an item $W_1 \rightarrow x . y$, this would indicate that the terminal $x$ has been recognized, and only $y$ remains to be parsed in order to recognize this rule.\\
 
 Once an initial state node has been constructed the main loop of the algorithm takes over. 
-The state is expanded until a non-deterministic \emph{branch state} is reached where a parser would be required to make a choice corresponding to the $switch$ action.
+The state is expanded until a non-deterministic \emph{branch state} is reached where a parser would be required to make a choice corresponding to the $switch$ operation.
 During the expansion process parsing instructions are recorded into an \emph{instruction table} which will be encoded into bitcode stream once the algorithm completes.
 The instruction table is an array of dynamically growing `strings' of instructions. 
 Each \emph{instruction string} corresponds to a particular branch state in the state graph.
@@ -1309,6 +1332,7 @@ An exception is made only when such an item already exists in the state, in whic
 Once this process is completed the newly added (unannotated) items are again expanded until no more unnanoted items with nonterminals following the cursor can be found. 
 For example, following the expansion procedure our example state will look like this.
 
+\clearpage
 \begin{figure}[!ht]
 \begin{center}
 \begin{tikzpicture}
@@ -1351,13 +1375,13 @@ All other items are removed from the new state.
 An item is \emph{completed} once the cursor has moved past all remaining tokens on the right-hand side of the rule.
 Once either a $shift$ or a $switch$ has been generated, several items in the state may be completed. 
 A special subroutine is responsible for handling these completed items which in turn generates $reduce$ and $delay$ instructions depending on the context.
-In the case of a $shift$ action, the items in the original state is completed whereas, in the case of a $switch$, each of the new states are processed by the routine.\\
+In the case of a $shift$ operation, the items in the original state is completed whereas, in the case of a $switch$, each of the new states are processed by the routine.\\
 
 \item[$\bullet$] Complete items --- Every time a FIRST set is processed, the generator must test whether all items in the state are complete. 
-In the case of a $shift$ action, the current state is tested and if all items are complete, a $return$ instruction must be generated. In 
+In the case of a $shift$ operation, the current state is tested and if all items are complete, a $return$ instruction must be generated. In 
 \end{enumerate}
 
-For example, iterative application of steps 1 and 2 will result in the following state changes
+For example, iterative application of steps 1 and 2 will result in the following state changes.
 
 \begin{figure}[!ht]
 \begin{center}
@@ -1467,7 +1491,6 @@ For example, iterative application of steps 1 and 2 will result in the following
 \end{figure}
 
 \clearpage
-
 \begin{figure}[!ht]
 \begin{center}
 \begin{tikzpicture}
@@ -1565,7 +1588,7 @@ The table bellow lists the performance of each individual operation according to
 
 It is possible for the operations that exhibit linear time performance, $shift$ and $goto$, to encode their arguments in a flattened binary tree or perform similar tricks in order to decrease asymptotic access time.
 However, the overhead of the additional operations and memory access is likely to dominate performance in practice since the number of arguments are expected to be few.
-Since the original LR algorithms used a large lookup table to determine every action, it appears to be common practice to simply ignore the time for these simple recognition operations.
+It is common practice to reduce these very basic recognition operations to constant time operations since the number of arguments to an instruction is fixed with respect to the number of input tokens.
 
 Given an input stream of $n$ tokens, every token in the input stream may only be tested once during the recognition pass.
 Hence, the number of $shift$ and $switch$ operations executed by the parse will certainly be linear in $n$.
@@ -1584,8 +1607,8 @@ Therefore, for all unambiguous grammars the number of $reduce$ operations is rou
 %Based on this assumption, it is our estimation that a typical average case performance of $o(n)$ is far more likely for most applications. (An argument that could most likely be applied to GLR and Earley parsers as well).
 
 The pair of actions $delay$ and $resolve$ should exhibit similar performance to $reduce$.
-We have already seen that the equivalent trace using delays may split a $reduce$ action into a single pair of $delay$ and $resolve$ actions.
-The only difference here is that some delay actions may be resolved using an $ignore$ which does not correspond to any reduce action.
+We have already seen that the equivalent trace using delays may split a $reduce$ operation into a single pair of $delay$ and $resolve$ operation.
+The only difference here is that some delay actions may be resolved using an $ignore$ which does not correspond to any $reduce$ operation.
 An $ignore$ token may be generated through a $resolve$ whenever two or more rules are evaluated simultaneously with lookahead. 
 Using the same argumentation showing that $reduce$ is $O(n)$ with respect to the number of input tokens it can be seen that the number of possible reductions in any one of these rules is linear.
 Assuming that the number of these simultaneous rules will be constant\footnote{An assertion that may require further investigation.}, the number of $ignore$ tokens will also be linear.
