@@ -132,10 +132,10 @@ A procedure is created for every production in the grammar and child productions
 This may be done in a speculative manner, backtracking where necessary, or by using some form of \emph{lookahead} mechanism where lexical tokens are investigated in advance before a node is created.
 
 Bottom-up techniques on the other hand attempt to deduce the leaf nodes of the parse tree first before moving up to the root nodes. 
-Theoretically this gives such a parser access to more contextual information [citation needed] as the derivation of productions are delayed until their contents has already been recognized.
+Theoretically this gives such a parser access to more contextual information %[citation needed] 
+as the derivation of productions are delayed until their contents has already been recognized.
 However, a top-down parser may not always have enough information to derive a production even when the contents of such a production has been recognized. 
-Certain context-free grammars require tokens following the the production to be recognized before it can decide whether the choice is really correct inside the context in which it is recognized
-\footnote{This concept should not be confused with the class of grammars known as \emph{context-sensitive} grammars which may have more than one token on the left-hand side of production rules.}.
+Certain context-free grammars require tokens following the the production to be recognized before it can decide whether the choice is really correct inside the context in which it is recognized\footnote{This concept should not be confused with the class of grammars known as \emph{context-sensitive} grammars which may have more than one token on the left-hand side of production rules.}.
 For this reason top-down parsers also typically employ lookahead in making such deductions.\\
 
 In \cite{knuth65} Knuth developed a body of theoretical knowledge around the concept of ``left-to-right parsers with rightmost derivation'' known in short as \emph{LR parsers}. 
@@ -168,19 +168,19 @@ Some parser generators will even simplify the parse tree output by removing node
 Furthermore, many parsers allow the user to specify additional precedence rules because writing a correct $LR(k)$ grammar can be difficult for some languages.
 
 It has also been claimed that computer languages should be designed for weaker parsers as this makes it easier to read and understand for a human reader.
-We will neither praise nor challenge this wisdom in our paper although we do suggest that further research should be conducted in order to support such a claim \emph{todo: citation - read up about this}.\\
+We will neither praise nor challenge this wisdom in our paper although we do suggest that further research should be conducted in order to support such a claim.\\ %\emph{todo: citation - read up about this}.\\
 
 Given that $LR(k)$ parsers are more powerful than their equivalent $LL(k)$ parsers, larger values of $k$ are often desirable in practical LL parsers.
-However, $LL(k)$ parsing, long believed to be intractable for large values of $k$, has shown large improvements in performance through the use of deterministic finite automata. \emph{todo: check this} 
-LL parsing has proven amenable to extension to larger classes of grammars with the popular ANTLR parser presenting two variants: LL(*) [citation needed] and so called Predicated-LL \cite{} [citation needed].
+However, $LL(k)$ parsing, long believed to be intractable for large values of $k$, has shown large improvements in performance and generality through the use of deterministic finite automata.%\emph{todo: check this} 
+The popular ANTLR parser presented the now famous variant $LL(*)$ \cite{193241}. %[citation needed] and so called Predicated-LL \cite{} [citation needed].
 
-The two best known algorithms that have achieved full generality for context-free languages (aside from simple back-tracking algorithms) is the Earley algorithm [citation needed] and Generalized LR or GLR algorithm [citation needed]\footnote{Sometimes it is refered to using the name of its inventor, Tomita.}.
-\emph{todo: Both of these can be represented as chart parsers}
+However, the two best known algorithms that have achieved full generality for context-free languages (aside from simple back-tracking algorithms) is the Earley algorithm \cite{362035} and Generalized LR or GLR algorithm\footnote{Sometimes the algorithm is also refered to using the name of its inventor, Tomita.} \cite{980564, 1623625}.
+%\emph{todo: Both of these can be represented as chart parsers}
 
-Despite significant improvements in the efficiency of both Earley and GLR parsers, they are still regarded as slow in comparison to their traditional LALR counterparts despite having similar asymptotic performance.
-In GLR this is usually attributed to the cost of maintaining the stack-structured graph that gives the parser the capability to merge different branches together\cite{Mcpeak04elkhound:a}.
+Despite significant improvements in the efficiency of both Earley and GLR parsers \cite{1146810, Mcpeak04elkhound:a}, they are still regarded as slow in comparison to their traditional LALR counterparts despite having similar asymptotic performance.
+In GLR this is usually attributed to the cost of maintaining the stack-structured graph that gives the parser the capability to merge different branches together \cite{Mcpeak04elkhound:a}.
 
-Other previous work similar to ours include \cite{1287949, Marc80, 991520, 146993, DBLP:conf/wia/GalvezSF06} [\emph{todo}].
+Other previous work similar to ours include \cite{1287949, Marc80, 991520, 146993, DBLP:conf/wia/GalvezSF06}. %[\emph{todo}].
 
 %\emph{(TODO)\\ %BUSY HERE
 %Generalized Parsing Techniques \cite{Thurston07}\\
@@ -213,7 +213,7 @@ Discourse begins with some example traces exploring the application of delayed a
 Finally more formalized trace semantics are defined in preparation for future proofs.
 
 In the final sections of the paper, the implementation details of a parser driver and a protoype parser generator are discussed.
-Our findings are presented in the \emph{Results} and \emph{Conclusion} sections along with an overview of the topics what remain for the future work.
+Our findings are presented in the Results and Conclusions sections along with an overview of the topics what remain for the future work.
 
 \section{Delayed reductions}
 
@@ -1053,19 +1053,22 @@ A formal method for describing traces and determining whether their equivalent t
 
 \subsection{A left-to-right parser with delayed reductions}
 We've seen that the instruction set given could in theory be used to construct parsers for a large range of context-free grammars if we can show that such a parser will produce the traces given above.
-In \cite{knuth65} Knuth showed that determining whether a grammar is in the class $LR(k)$ for some unspecified $k$ is undecidable in general. 
-This makes us wary of attempting to solve problems that are intractable by nature. 
-Hence, let us first establish what is actually possible.
+As discussed in the previous section, an LD parser recognizes production rules left-to-right, bottom-up manner. 
+Assuming that no shuffling of instructions take place, this type of parser is trivially equivalent to an \emph{LR(0)} parser.
 
-For some class of grammars we need to show that a finite parser\footnote{Note that we refer to the parser here in terms of the generated bitcode stream.} can be constructed that generates an equivalent trace to the mechanically generated trace.
-Generating a simple shift-switch-reduce trace for a grammar is similar to enumerating all strings that the grammar can generate.
+However we wish to construct parsers for any $k$ including $unbounded k$. In \cite{knuth65} Knuth showed that determining whether a grammar is in the class $LR(k)$ for some unspecified $k$ is undecidable in general. 
+This makes us wary of attempting to solve problems that are intractable by nature. 
+Hence, let us first attempt to establish what is theoretically possible.
+
+For some class of grammars it will be necessary to show that a finite parser\footnote{Note that we refer to the parser here in terms of the generated bitcode stream.} can be constructed that generates an equivalent trace to the mechanically generated trace.
+Generating a simple shift-reduce trace for a grammar is similar to enumerating all strings that the grammar can generate.
 
 Another view of this idea is that if a parser can generate the same sequences of strings that a grammar can, then it is possible to \emph{recognize} the grammar with the given parser.
 However, if a parser can generate the same sequences of traces, then it is also capable of generating the same structure that the grammar does.
-Hence we will say that the parser is capable of \emph{translating} to a grammar if it can generate an equivalent trace.
+In other words we will say that the parser is capable of \emph{translating} to a grammar if it can generate an equivalent trace.
 
 Both strings and traces can have infinite nested `substrings' or `subtraces' inside their main traces.
-By using a naive\emph{[todo:i]} algorithm, the generator will get `stuck' inside a subtrace and never explore the remainder of the grammar.
+By using a naive algorithm, the generator will get `stuck' inside a subtrace and never explore the remainder of the grammar.
 An procedure for expanding the traces of the grammar in a `breadth-first' manner such that all branches of the grammar can make progress is needed.
 In other words, is there a function $E(G, n)$ producing a set of traces of the grammar $G$ with $n \in \mathbb{N}$ such that the following relations hold?
 \begin{equation} E(G, n) \sqsubseteq E(G, n+1) \sqsubseteq \top_{G} \end{equation} and \begin{equation} lim_{n \to \infty} E(G,n) = \top_{G} \end{equation}
@@ -1085,14 +1088,14 @@ G \equiv \quad & A_1 \rightarrow x\\
                & S_2 \rightarrow B D \$
 \end{align*}
 
-The set of trace can be expanded as follows:\\
-First add the empty trace to the set. Take all the starting rules, in this case, $S_1$ and $S_2$.
-Take all nonterminals on the right-hand side and expand them once using all possible rules. 
+The set of traces can be expanded as follows:\\
+First add the empty trace to the set. 
+Take all the starting rules, in this case, $S_1$ and $S_2$.
+Next take all nonterminals on the right-hand side and expand them once using all possible rules. 
 
 If some rules are incomplete, then continue in the next iteration. This guarantees that the entire grammar can be enumerated in a single loop such that $lim_{n \to \infty} ET(G,n) = \top_{G}$.
-
-$ET(G, n+1) \equiv ET(G, n) \cup Complete(IT(G, n))$
-$Complete(G, n) \equiv $
+$IT(G, n)$ will represent all `incomplete' traces that need to go through more rounds of expansion before being added the sets generated by $ET(G, n)$.
+If we define a function $ExpandRound$ that does just this then it may be convenient to write the equation $ET(G, n+1) \equiv ET(G, n) \cup ExpandRound(IT(G, n))$.
 
 {\small\begin{align*}
 ET(G, 0) & = \{ \langle \rangle \}\\
@@ -1120,19 +1123,19 @@ IT(G, 2) & = \{ \\
  \textellipsis
 \end{align*}}
 
-As discussed in the previous section, an LD parser recognizes production rules left-to-right, bottom-up manner. 
-Assuming that no shuffling of instructions take place, this type of parser is equivalent to an \emph{LR(0)} parser.
-However, we have also given the parser the ability to resolve delayed rules in a right-to-left, top-down manner.
+
+%As discussed in the previous section, an LD parser recognizes production rules left-to-right, bottom-up manner. 
+%Assuming that no shuffling of instructions take place, this type of parser is equivalent to an \emph{LR(0)} parser.
+%However, we have also given the parser the ability to resolve delayed rules in a right-to-left, top-down manner.
+
+%\emph{ (TODO: Discuss how this affects our work) }\\
 
 
-\emph{ (TODO: Discuss how this affects our work) }\\
-
-
-\emph{TODO:
-When calling procedures in a recursive-ascent parser we are intuitively traversing the grammar's state diagram in a bottom-up manner.
-However, when returning from a function to a previous state we revert to a top-down traversal.
-Hence traversing the call stack in an upward or a downward direction can be viewed as switching between top-down versus bottom-up recognition of the grammar. 
-In more general terms, when the bottom-up technique cannot reduce a rule it becomes resolved in a top-down fashion later on by replacing the delayed placeholder token.}
+%\emph{TODO:
+%When calling procedures in a recursive-ascent parser we are intuitively traversing the grammar's state diagram in a bottom-up manner.
+%However, when returning from a function to a previous state we revert to a top-down traversal.
+%Hence traversing the call stack in an upward or a downward direction can be viewed as switching between top-down versus bottom-up recognition of the grammar. 
+%In more general terms, when the bottom-up technique cannot reduce a rule it becomes resolved in a top-down fashion later on by replacing the delayed placeholder token.}
 
 %%%%%%%%%%%%%%%%%%% IMPLEMENTATION
 \section{Implementation}
@@ -1244,8 +1247,10 @@ The next opcodes that are decoded are the $reduce$ and $resolve$ instructions, f
 
 \subsection{Parser construction algorithm}
 Constructing a parser by hand is a time consuming and error prone process. For this reason an automatic construction algorithm is desireable.
-As a prototype we have constructed a prototype parser generator that is sufficient for many grammars including grammars with lookahead greater than 1.\\
-Given a grammar specification, the construction algorithm outputs the bitcode representation to be used with the interpreter.\\
+As a prototype we have constructed a parser generator that is sufficient for a limited subset of unambiguous grammars.
+While the possible grammars cannot yet be classified, many grammars with large lookahead requirements (including cycles) will work.
+
+Given a grammar specification, the construction algorithm outputs the bitcode representation to be used with the interpreter.
 
 We will use a state graph to represent various possible states that the parser can inhabit. 
 Every \emph{state} is composed of a set of unique items. 
@@ -1254,7 +1259,8 @@ Finally states have two types of edges leading from one state to another.
 The first type represents $switch$ branches and the second represents $goto$ edges. We also distinguish between \emph{leading} and \emph{following} edges with reference to a particular state node.\\
 
 Along with a grammar specification, a user must also specify the top-most nonterminal in the grammar which, given a conforming input stream, should form the root node of the final parse tree.\\
-For example given the following grammar:
+
+For example, using the following grammar:
 
 \parbox{.3\textwidth}{\begin{align*}
 G \equiv \quad & A_1 \rightarrow x\\
@@ -1266,8 +1272,8 @@ G \equiv \quad & A_1 \rightarrow x\\
                & S_2 \rightarrow B C b \$
 \end{align*}}
 
-The initial state will contain the rules corresponding the root production of the grammar, in this case $S_1$ and $S_2$.
-
+The initial state will contain the rules corresponding the root production of the grammar, in this case $S_1$ and $S_2$.\\
+\clearpage
 \begin{figure}[!ht]
 \begin{center}
 \begin{tikzpicture}
@@ -1284,12 +1290,12 @@ The initial state will contain the rules corresponding the root production of th
 \end{center}
 \end{figure}
 
-The period on the right-hand side of each rule is a cursor indicating the progress of the rule in a particular parser state.
+The period on the right-hand side of each rule is the cursor indicating the progress of the rule in a particular parser state.
 For example, given an item $W_1 \rightarrow x . y$, this would indicate that the terminal $x$ has been recognized, and only $y$ remains to be parsed in order to recognize this rule.\\
 
 Once an initial state node has been constructed the main loop of the algorithm takes over. 
 The state is expanded until a non-deterministic \emph{branch state} is reached where a parser would be required to make a choice corresponding to the $switch$ action.
-During the expansion progresses, parsing instructions are recorded into an \emph{instruction table} which will be encoded into bitcode stream once the algorithm completes.
+During the expansion process parsing instructions are recorded into an \emph{instruction table} which will be encoded into bitcode stream once the algorithm completes.
 The instruction table is an array of dynamically growing `strings' of instructions. 
 Each \emph{instruction string} corresponds to a particular branch state in the state graph.
 An alternative view of this idea is that every instruction string could represent a procedure of a recursive ascent parser written in an imperative programming language.
@@ -1323,20 +1329,24 @@ For example, following the expansion procedure our example state will look like 
 \end{center}
 \end{figure}
 
+Notice that there are two instances of the rule $S_2 \rightarrow . B C b \$$ annotated with the rules $(B_1)$ and $(B_2)$.
+
 \item Shift terminal tokens --- Once all items have been expanded, each item is once again inspected. 
-If a terminal token follows the cursor, it is moved one token forward and the terminal token is placed into a temporary set to be shifted 
-known, for historical reasons, 
+If a terminal token follows the cursor, it is moved one token forward and the terminal token is placed into a temporary set to be recognized.
+For historical reasons, the set is known
 as the \emph{FIRST} set\footnote{$LR(k)$ parsers make a distinction between FIRST set and FOLLOW sets indicating, respectively, 
 the first terminal tokens that can be recognized in a string of grammar tokens and the sets of terminals that could follow each of the FIRST terminals.} of the current state.
 Because there must be at least one terminal token in the grammar (specifically the end-of-stream token \$) there is at least one token in the FIRST set.
 If only one unique terminal exists in the set, then the state is \emph{deterministic} and hence a $shift$ instruction will be generated and appended to the current string of instructions in the instruction table.
 However, if multiple unique terminals exist in the FIRST set of the state, then the state is a non-deterministic branch state and a $switch$ instruction is generated instead.
 \begin{itemize}
-\item Given that a $shift$ instruction must be generated, \emph{TODO: ...}. Then the entire procedure is repeated until a set of FIRST terminals must once again be shifted.
+\item Given that a $shift$ instruction must be generated, the tool checks whether all items in the state are $complete$ in the sense described below. 
+If they are not then the entire procedure is repeated until a set of FIRST terminals must once again be shifted. 
+Otherwise, the tool returns to the state that preceded this one.
 \item Given that a $switch$ instruction must be generated, the current state must be duplicated once for every unique terminal in the switch. 
 An edge labeled with the terminal token connects every new state to its source.
 However, every duplicate state must be filtered so that only the rules partaking in a particular branch of the switch are included.
-This is handled by checking all 
+All other items are removed from the new state.
 \end{itemize}
 An item is \emph{completed} once the cursor has moved past all remaining tokens on the right-hand side of the rule.
 Once either a $shift$ or a $switch$ has been generated, several items in the state may be completed. 
@@ -1344,7 +1354,7 @@ A special subroutine is responsible for handling these completed items which in 
 In the case of a $shift$ action, the items in the original state is completed whereas, in the case of a $switch$, each of the new states are processed by the routine.\\
 
 \item[$\bullet$] Complete items --- Every time a FIRST set is processed, the generator must test whether all items in the state are complete. 
-In the case of a $shift$ action, the current state is tested and if all items are complete, a $return$ instruction must be generated and all \emph{...(todo)}.
+In the case of a $shift$ action, the current state is tested and if all items are complete, a $return$ instruction must be generated. In 
 \end{enumerate}
 
 For example, iterative application of steps 1 and 2 will result in the following state changes
@@ -1378,7 +1388,7 @@ For example, iterative application of steps 1 and 2 will result in the following
      \parbox{0\textwidth}{\begin{align*}
      & S_1 \rightarrow A . C a \$ \quad {(A_1)}\\
      & S_2 \rightarrow B . C b \$ \quad {(B_1)}\\
-     & S_2 \rightarrow B . C b \$ \quad {(B_2)}\\
+     & S_2 \rightarrow . B C b \$ \quad {(B_2)}\\
      & B_2 \rightarrow x . z
      \end{align*}}
    };
@@ -1388,6 +1398,8 @@ For example, iterative application of steps 1 and 2 will result in the following
 \caption{A $delay$ instruction is deduced by completing rules $A_1$ and $B_1$. Take note of rule $B_2$ which cannot be completed due to the remaining terminal $z$.}
 \end{center}
 \end{figure}
+
+\clearpage
 
 \begin{figure}[!ht]
 \begin{center}
@@ -1454,6 +1466,8 @@ For example, iterative application of steps 1 and 2 will result in the following
 \end{center}
 \end{figure}
 
+\clearpage
+
 \begin{figure}[!ht]
 \begin{center}
 \begin{tikzpicture}
@@ -1492,16 +1506,34 @@ For example, iterative application of steps 1 and 2 will result in the following
 \end{center}
 \end{figure}
 
+\begin{figure}[!ht]
+\begin{center}
+\parbox{.3\textwidth}{\begin{tikzpicture}
+   \path (0,0) node[draw,shape=rectangle] (S2) 
+   {
+     \parbox{0\textwidth}{\begin{align*}
+     & S_2 \rightarrow B . C b \$ \quad {(C_1)}\\
+     & S_2 \rightarrow B . C b \$ \quad {(C_2)}\\
+     & C_1 \rightarrow . y\\
+     & C_2 \rightarrow . C y \quad {(C_1)}\\
+     & C_2 \rightarrow . C y \quad {(C_2)}
+     \end{align*}}
+   };
+   \path (-2,0.9) node (S2n) {2};
+\end{tikzpicture}}
+\caption{Expanding state 2.}
+\end{center}
+\end{figure}
+
 At this point our instruction string will contain a shift, delay and a switch instructions.
 \begin{enumerate}
 \item[0] $shift(x), delay, switch(y \mapsto 1, z \mapsto 2)$\\
-\item $shift(y), switch(a \mapsto ?, b \mapsto ?, y \mapsto ?)$\\
-\item $shift(z), shift(y), switch(b \mapsto ?, y \mapsto ?)$
+\item $shift(y), reduce(C_1), switch(a \mapsto ?, b \mapsto ?, y \mapsto ?)$\\
+\item $shift(z), reduce(B_2), shift(y), reduce(C_1), switch(b \mapsto ?, y \mapsto ?)$
 \end{enumerate}
 
-In the final section of this paper we will discuss the limitations of this algorithm and discuss some proposals for extension that take into account the full set of context free grammars. 
-
-(TODO: We will also show that parsers built using this technique already includes the entire class of $LR(1)$ grammars)
+%In the final section of this paper we will discuss the limitations of this algorithm and discuss some proposals for extension that take into account the full set of context free grammars. 
+%(TODO: We will also show that parsers built using this technique already includes the entire class of $LR(1)$ grammars)
 
 \section*{Results}
 
@@ -1531,7 +1563,7 @@ The table bellow lists the performance of each individual operation according to
 \caption{Performance of individual parsing operations.}
 \end{center}\end{table}
 
-For the $shift$ and $goto$ operations that exhibit linear time it is possible to encode their arguments in a flattened binary tree.
+It is possible for the operations that exhibit linear time performance, $shift$ and $goto$, to encode their arguments in a flattened binary tree or perform similar tricks in order to decrease asymptotic access time.
 However, the overhead of the additional operations and memory access is likely to dominate performance in practice since the number of arguments are expected to be few.
 Since the original LR algorithms used a large lookup table to determine every action, it appears to be common practice to simply ignore the time for these simple recognition operations.
 
@@ -1573,7 +1605,7 @@ Although a little unexpected at first, we came to the conclusion that concepts f
 This is not so suprising in retrospect given that grammars have a lot in common with programs and demonstrate similar decidability issues.
 
 The distinction made between language recognition and language translation allowed us to separate these two concerns into separate passes, 
-thereby simplifying lookahead greatly. \emph{TODO: Another contribution is the recognition of the longest non-deterministic strings ...}
+thereby simplifying lookahead greatly. %\emph{TODO: Another contribution is the recognition of the longest non-deterministic strings ...}
 
 From an implementation point of view, a parser driver was implemented consisting of a lexer, parser interpreter and a tree builder.
 In addition to this a prototype parser generator tool was implemented using our current work-in-progress construction algorithm.
