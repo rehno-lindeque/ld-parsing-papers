@@ -1,0 +1,341 @@
+
+\documentclass[11pt]{article}
+
+%%%%%%%%%%%%%%%%%%% PACKAGES %%%%%%%%%%%%%%%%%%%
+\usepackage{geometry}
+\geometry{a4paper}
+%\usepackage{gcl}
+%\usepackage{pfs}
+%\usepackage{algorithmic}
+%\usepackage{graphicx}
+%\usepackage{epstopdf}
+%\usepackage{natbib}
+%\usepackage{fancyvrb}
+%\usepackage{float}
+%\usepackage{wrapfig}
+%\usepackage{proof}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{stmaryrd}
+
+
+%%%%%%%%%%%%%%%%%%%% MACROS %%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%Stuff from SICL article%%%%%%
+
+%%%%%%%%%%%%%%%%%%% DOCUMENT %%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%\title{A formal foundation for programming language design}
+\title{Simple programs\\\small{(A formal foundation for programming languages)}}
+\author{Rehno Lindeque}
+
+\maketitle
+
+\begin{abstract}
+A considerable amount of research effort has been vested in exploring the relationship between computer programming languages and well-defined formal languages such as mathematics and logic.
+This paper attempts to consolidate various mathematical theories and semantic models into a unified model of computation that is both simple and practical.
+We take care to model concepts that are not typically described in pure mathematics but which are pervasive in many real-world computer programs.
+In particular non-determinism, explicit processes and constraint programming is included in the formal system.
+
+
+Our observation that both mathematical and computer programming languages are self-referential leads us to separate computational models into two orthogonal yet reciprocal concepts that is based on the Curry-Howard correspondence.
+Finally we study our model using concepts from abstract and foundational mathematics such as category theory.
+Hence programming expressions are recast in terms of `definitions' and `queries' which forms the basis of our paradigm.
+%Hence, we reframe various computational theories in terms of `definitions' and `queries' by drawing on .
+
+%In this paper we explore advances in programming language theory and mathematics in order to construct a simple and novel view of computation.
+%Our paradigm is formulated around the synthesis of definitions and queries through the well-known Curry-Howard correspondence.
+%%It is our opinion that this archetype expresses the nature of computation well due to the orthogonal, yet reciprocal nature of these two concepts.
+%It is our opinion that this archetype can be usefully employed to express computer programs due to the orthogonal, yet reciprocal nature of these two operations.
+
+%%We show that concepts from catagory theory can be related to . 
+%The model that we propose is described as a formal language designed with explicit reference to generic programming, non-determinism, sequential processes, constraint modelling and proofs as programs.
+
+%%The language is based on 
+%%propose a new formal language as a foundation for building new programming languages.
+%%We speculate that the concepts of definitions and queries as a pragmatic form two central and orthogonal requirements of any formal language.
+%%This paper is intended as exploratory research.
+%%\emph{(TODO: Exploratory research...?)}
+\end{abstract}
+
+\textbf{Keywords:} Formal language, Computational theory, Self-refrencing definition	
+
+\section{Introduction}
+
+\subsection{The nature of computation}
+\subsubsection{Universality}
+\begin{itemize}
+\item \emph { Universal Turing  Machine }\\
+\item \emph { The Lambda Calculus }\\
+\item \emph { The Halting problem }\\
+\item \emph { Impredicativity: http://en.wikipedia.org/wiki/Impredicativity }\\
+\item \emph { An axoimatic foundation of choice: Zermelo–Fraenkel set theory  - Note the foundational crisis of mathematics.}
+\end{itemize}
+
+\subsection{Pragmatics}
+\subsubsection{Computer languages}
+
+While proof of universality for a combination of operations allow us to identify the languages in which all known computation is \emph{possible} it is not the only metric by which we can measure the pragmatic importance of such a system.
+These metrics are necesarily subjective requirements that must be specified rather than derived.
+
+\begin{itemize}
+\item Expressivenes: The level of self-reference available to a programming language.
+\end{itemize}
+
+\section{Introduction}
+In the initial sections of this paper we will ignore certain existing. In the final sections a comparison with the existing theories is provided.
+
+\section{Concepts}
+
+\begin{itemize}
+\item Curry-Howard correspondence: Once one starts investigating, similar correspondences can be found in a very wide range of programming concepts.
+\end{itemize}
+
+\subsection{Defintion and queries}
+\subsubsection{Existence as the fundamental assertion}
+We propose that the most fundamental definition that can be understood is an assertion of existence. 
+By simply listing any unreserved token in our language, we will claim that it exists in some \emph{context}.
+Where this idea is used mathematical notation or requires explicit elucidation in commentary it will be indicated using the $\exists$ symbol.
+For example, an assertion that the user-defined token $a$ exists will be written $\exists a$ in the documentation.
+Inversely, claiming that $a$ does not exist can be indicated as $\nexists a$.
+Mathematically the assertion that multiple tokens exists can be indicated in a single expression in this fashion: $\exists a \land \exists b \land \exists c$.
+In our basic language, simply listing these elements as \texttt{a b c} is equivalent.
+
+%\begin{itemize}
+%\item \emph { $a \neq \emptyset$ means $a$ exists. }
+%\item \emph { $\exists a . a \in [a\ b\ c] \equiv [a\ b\ c] \cap [a] \neq \emptyset$ means ``$a$ exists in the set $[a\ b\ c]$''. }
+%\end{itemize}
+%\emph { We use the symbol $\emptyset$ interchangeably with the more general symbol $\bot$ commonly used with partial ordering and denotational semantics. }\\
+
+%This concept is easily understood in a pragmatic manner. 
+%For example, take a simple file that contains a single data element \{\texttt{5}\}. 
+%Consider what this means to the casual observer.
+%By assuming that all external references are hidden from the observer, we can only assume that the data element \texttt{5} exists.
+%We will say that \emph{\texttt{5} exists within the context of the file}. 
+%Similarly any \emph{data} is simply an assertion of the existence of said data within the \emph{context} in which it is defined.
+
+\subsubsection{Source, state and denotational representations}
+The difference between mathematical formalism and computational formalism is that the mechanical procedure of converting data from one representation to another becomes relevant.
+In programming language design denotational semantics are used for the first whereas operational semantics is used for the second.
+
+Our approach in this paper will be a little different. We will use an \emph{annotated} syntax to indicate various representations, giving the reader a concise idea of the domain that the data inhabits.
+
+Let us look again at our fundamental assertion of existence. There are three environments in which such an assertion must be considered.
+\begin{itemize}
+\item The first is the \emph{unoccupied} representation $\textlquill$a b c$\textrquill$
+\item An \emph{occupied} representation $\rightarrow$ <<a b c>>.
+\item ... 
+\end{itemize}
+We have already given a 
+
+Internal annotation...
+
+More precisely:
+
+
+
+\subsubsection{Querying existence}
+Following on the previous definition we are inclined to ask three questions.
+
+\begin{itemize}
+\item \emph{Which tokens exist?} The only sensible manner of answering this question is by reproducing the definitions already given to us. 
+This will be written using the external 
+\item \emph{Which tokens do not exist?}
+\item \emph{Which tokens do not exist?}
+\end{itemize}
+
+A notation $Q\llbracket a \rightarrow b \rrbracket = a \mapsto a:b$ will be used
+
+$Q\llbracket \ \rrbracket \mapsto a$
+
+
+\subsubsection{Metadata}
+While existence is a 
+
+\subsubsection{Inference as context}
+
+
+
+\subsubsection{Inference as context}
+By listing symbols outside of any context we will simply claim that they exist.\\
+
+
+
+
+We propose that the most fundamental definition is an assertion of existence. By listing symbols outside of any context we will simply claim that they exist.\\
+For example:
+\begin{itemize}
+\item $a$: means ``$a$ exists''.
+\item $a\ b\ c$: means ``$a$, $b$ and $c$ exist''.
+\end{itemize}
+
+In addition to simply defining symbols we would like to 
+Recall that the Curry-Howards [citation needed] correspondence states that proofs are programs refering to the suprisingly pervasive connection that mathematics has to logic.
+If we claim that the basic building block of mathematics are functions then we could imagine that the basic building block of logic is induction.
+Indeed, curry-howard [citation needed] showed that functions correspond to logical implication. 
+It is tempting to cast these two dual (?) constructs into the roles of queries and definitions respectively.\\
+
+In logic the operator $\rightarrow$ can be defined as follows:
+\begin{itemize}
+\item $a \rightarrow b$: means ``the truth of $a$ implies the truth of $b$''. 
+Following our previous conjecture of existence being the fundamental assertion we will refine our meaning slightly to ``the existence of $a$ implies the existence of $b$'' where truth values 
+can be converted to an assertion of existence simply by converting to the corresponding set operation usually through set operations such as intersection and union in accordance with the curry-howard correspondence.
+\end{itemize}
+
+Functions in mathematics have a long history and many different representations including the lambda calculus.
+In order to clearly establish the connection to sets and logical implication, we will define functions as sets of mappings such that elements on the left hand side of the 
+$\mapsto$ operator will be replaced by elements on the right-hand side when it is bound. (Note: we will discuss binding later... this will be slightly different from the lambda calculus since we will be using intersect-binding in sets)
+
+\begin{itemize}
+\item $a \mapsto b$: means ``$a$ will be replaced by $b$''. 
+\item $a \mapsto [b\ c\ d]$: means ``$a$ will be replaced by the set $[b\ c\ d]$''. 
+\end{itemize}
+
+Let us then define an isomorphism $Q$ that converts a definition into a query as follows:\\
+
+$Q\llbracket a \rightarrow b \rrbracket = a \mapsto b$
+
+and consequently
+
+$Q^{-1}\llbracket a \mapsto b\rrbracket = a \rightarrow b$
+
+
+Category theory similarly makes use of `Arrows' and monads... (todo)
+
+
+However we also wish to model induction as the basic.
+
+\begin{itemize}
+\item $a \rightarrow b$: means ``the existence of $a$ implies the existence of $b$''.
+\item $a \rightarrow [b\ c\ d]$: means ``the existence of $a$ implies the existence of $b$, $c$ and $d$''.
+\end{itemize}
+
+Equivalence
+$a = b$
+
+Context
+$a = [x y]$ means "$x$ and $y$ exists within the context of $a$. (Or perhaps even, if $a$ exists then $x$ and $y$ exists)"
+
+Contextual equivalence
+$a = [(x = i) (y = j)]$
+
+\subsubsection{ A comparison with structural (operational) semantics }
+
+%---
+%$a$
+
+%--------------------
+%$a \land b \land c$
+
+%-------------   
+%$a \mapsto x$
+
+%which becomes 
+
+%---------------
+%a \land b \land a = b
+
+
+%$a$\\
+%-----------\\
+%$x \land y \land i \land j x \mapsto i \land  y \mapsto j$
+
+
+
+%TODO: Using queries
+%a
+%a.b = d
+%a.c = e
+
+
+
+\section*{Assertions as type systems}
+"Labeling"
+
+\section*{Assertions as containers}
+
+\section*{Recursive types (meta types)}
+
+\section*{Infinite types}
+
+\section*{Infinite types as functions}
+Note: discuss fixed points here...
+
+\section*{Terminating type systems}
+It is a well known result that no program can be constructed that can prove whether any other program will terminate. [citation needed: turing]
+We say that the problem of determining termination is undecidable in general.
+It is our contention that whenever a problem that is seemingly intractable crops up it is often the case that we are asking the wrong question.
+Instead a more useful proposition would be to ask whether we can construct programs in a turing-complete language and yet be certain that it will terminate.
+At first this may appear to be the same problem merely stated in a different way, but consider the inverse implication that if we could not write programs that we would be certain would terminate.
+Clearly we \emph{can} write programs that we are certain would terminate or would not terminate. 
+There are many trivial examples of both that can be considered.
+The problem then, is reduced to merely guaranteeing that we \emph{do} write programs with pre-determined termination or non-termination characteristics.
+Indeed nontermination is desireable in some subprocesses where a parent process can force termination. 
+An interpreter for another language for one thing can be viewed as a non-deterministically terminating type. 
+If the child process halts then the interpreter will halt. 
+However, the user may also choose to stop the interpreter. In which case the child process will also be stopped.
+Hence there are two views of termination: One which is internally non-deterministic and one which is externally non-deterministic.
+During the construction of programs, such choices form the guiding design principles in constructing correctly.
+Essentially it is a engineering problem of `where' to allow non-determinism. We could choose to provide an interpreter that only execute terminating programs with limited computational power or allow non-terminating 
+programs with full computational power.
+
+To understand this concept, let us state the halting-problem in different words:
+There exists infinitely many programs of infinite complexity. In order to prove for any of these programs that they will terminate we require a infinitely complex prover program.
+However, for any program with finite complexity there exists a proof program of finite complexity that can show whether this program terminates depending on some 
+In fact these are the only programs in which we are interested in because these are the only programs that we can realistically write. 
+A problem is that additional complexity can be injected into programs through user input which implies that additional complexity must be injected into the prover program in order deal with it.
+
+(Note: Writing programs that are not provable given all inputs is itself a undecidable problem?)
+Hence, if this idea could be implemented in practice we will claim that our programs are either terminating or non-terminating \emph{by construction}.
+In order to guarantee construction we introduce the concept of terminating and non-terminating type systems.
+The previous section the concept of infinite types were introduced and a comparison to functions was given.
+Let us substitute the term `infinite' with the term `non-terminating'. A terminating type can be constructed from a non-terminating type by placing some upper bound on the infinite type.
+In essence, the burden of proof is moved to the user.
+Now only the programs that we can construct are those we can prove, but this is exactly what we want rendering all other programs irrelevant.
+It is proposed that there are programs we that cannot write and hence cannot prove termination either.
+
+TODO: Attempt a formal proof using turing machines or similar...? Prove that any program generated by a turing machine can be proven by the same turing machine will terminate if no outside inputs are given.
+
+
+Furthermore, termination is not always a desireable feature
+
+\section*{Compilation}
+It is the responsibility of the \emph{compiler} to convert the definition graph into a state graph in a way such that all side effects that can occur, may occur. The compiler
+
+Using our language framework it is possible that the compiler may be engineered as a \emph{reflective} builder in the sense that a user extends the compiler rather than merely using the compiler as a tool.
+This would allow the user to create DSL's and even specify their own "compile-time" optimizations specific to the domain and type system engineered by them.
+However, we anticipate that if this is attempted some form of library system would needed to include pre-compiled code as a library rather than.
+
+The level of static compilation is dependent on what a user can input into the system. JIT compilation should be availalbe for scripting purposes, however some mechanism is needed to hide static data 
+from the graph while maintaining those parts that may be exposed to user input.
+This is both a performance and a security concern.
+
+
+
+\section*{Conclusions}
+
+The language framework unifies 4 major programming paradigms: 
+\begin{itemize}
+\item Imperative programming through side-effects and a state transition system
+\item Functional and meta programming which converts definitions to queries and implements queries to construct new definitions.
+\item A proof assitant. Definitions and queries are coincide through the Curry-Howard isomorphism. (TODO: But how is correctness checked? By expansion and the type system possibly).
+\item Logic / Constraint-based programming. Queries may be run through a constraint solver. (also used to compile the state transition system and finally the AST of a static program. I.e. a self-compiler)
+\end{itemize}
+
+Even though language designers frowns on use of the word "high-level" to describe programming languages we would never-the-less like to use it here. 
+Each paradigm in the above list represents a distinct tier in language capability in the sense that every item transfers responsibility from the human programmer to the compiler and/or libraries. NOTE: 
+
+SIDE NOTE (not for paper): A speculative question then is, what is the next tier? Since we've defined "high-level" as handing responsibility to the compiler the only logical conclusion is that the next level would involve
+the compiler inferring constraints by itself which requires what we characterize as "creativity" or perhaps even "autonomy". Practically, this probably implies some form of fuzzy constraints \& adapting to changing requirements or the behaviour of 3rd party agents.
+Note that constraints in this context corresponds to "specifications" or "requirements".
+
+\section*{Future work}
+
+\bibliographystyle{plain}
+\bibliography{delayedcase}
+
+\end{document}
+
