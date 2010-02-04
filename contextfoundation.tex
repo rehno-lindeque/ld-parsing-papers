@@ -11,14 +11,23 @@
 %\usepackage{epstopdf}
 %\usepackage{natbib}
 %\usepackage{fancyvrb}
-%\usepackage{float}
+\usepackage{float}
 %\usepackage{wrapfig}
 %\usepackage{proof}
+\usepackage{verbatim} 
 
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{amsmath}
 \usepackage{stmaryrd}
+
+%\usepackage{listings}
+\usepackage{framed}
+%\usepackage{caption}
+%\usepackage{algo}
+%\usepackage{wsuipa}
+%\usepackage{ipalmacs}
+%\usepackage{textcomp}
 
 
 %%%%%%%%%%%%%%%%%%%% MACROS %%%%%%%%%%%%%%%%%%%%
@@ -36,14 +45,16 @@
 
 \begin{abstract}
 A considerable amount of research effort has been vested in exploring the relationship between computer programming languages and well-defined formal languages such as mathematics and logic.
-This paper attempts to consolidate various mathematical theories and semantic models into a unified model of computation that is both simple and practical.
+This paper attempts to consolidate various mathematical theories and semantic models into a unified language for computation that is both simple and practical.
 We take care to model concepts that are not typically described in pure mathematics but which are pervasive in many real-world computer programs.
 In particular non-determinism, explicit processes and constraint programming is included in the formal system.
+Our observation that both mathematical and computer programming languages are self-referential leads us to separate language into two orthogonal, yet reciprocal concepts.
+The paradigm relies on `definitions' and `queries' as the foundation for computational expressions.
+Static definitions are converted into executable queries and vice versa in a manner consistent with the Curry-Howard correspondence.
+We also make observations around category theory, dependent types and explicit termination and nontermination.
+Our hope is that this approach will allow people to write simple programs yet with the advantages of typed generic programming that follows naturally from the Curry-Howard correspondence.
+%We also study our model from category theory.
 
-
-Our observation that both mathematical and computer programming languages are self-referential leads us to separate computational models into two orthogonal yet reciprocal concepts that is based on the Curry-Howard correspondence.
-Finally we study our model using concepts from abstract and foundational mathematics such as category theory.
-Hence programming expressions are recast in terms of `definitions' and `queries' which forms the basis of our paradigm.
 %Hence, we reframe various computational theories in terms of `definitions' and `queries' by drawing on .
 
 %In this paper we explore advances in programming language theory and mathematics in order to construct a simple and novel view of computation.
@@ -61,8 +72,241 @@ Hence programming expressions are recast in terms of `definitions' and `queries'
 %%\emph{(TODO: Exploratory research...?)}
 \end{abstract}
 
-\textbf{Keywords:} Formal language, Computational theory, Self-refrencing definition	
+\textbf{Keywords:} Formal language, Computational theory, Self-refrence, programming languages
 
+\section{A rephrasing/refactoring of the material below (2010-01-18)}
+
+Let us define an evaluation function $\mathbb{E}$ that evaluates a query to produce a definition. 
+We will sometimes differentiate between `compile-time' evaluation and `run-time' evaluation respectively using the subscripts $\mathbb{E}_{C}$ and $\mathbb{E}_{R}$ respectively.
+
+Two kinds of definitions will be possible. The first using the symbol $\rightarrow$ indicates a static definition. The second, $\mapsto$ indicates a ``blocked'' definition.
+
+ 
+\floatstyle{boxed}
+\newfloat{example}{thp}{lop}
+\floatname{example}{Example}
+
+
+\begin{example}[H]
+$\hspace*{1em} \mathbb{E}_{C}\llbracket \:\: a \rightarrow b \:\: \rrbracket \Rightarrow a \rightarrow b$
+\caption{Module A1}
+\end{example}
+
+
+\begin{example}[H]
+$\hspace*{1em} \mathbb{E}_{R}\llbracket \:\: a \mapsto b \:\: \rrbracket \Rightarrow a \rightarrow b$
+\caption{Module A2}
+\end{example}
+
+
+To this definition we will add one simple query: A conjunct selection.
+\begin{example}[H]
+$
+  \hspace*{1em}
+  \mathbb{E}_{C} \left \llbracket
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow a . b 
+  \end{array} \right \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: a \rightarrow b \:\: \rrbracket \\
+  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: c \rightarrow a.b \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} a \rightarrow b \\
+  \hspace*{1em} c \rightarrow \mathbb{E}_{C} \llbracket \:\: a.b \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} a \rightarrow b \\
+  \hspace*{1em} c \rightarrow (a \rightarrow b) 
+$
+\caption{Module A3}
+
+\end{example}
+
+Next we investigate how queries interact with ``guarded/blocked/blocking'' definitions.
+\begin{example}[H]
+$
+  \hspace*{1em}
+  \mathbb{E}_{C} \left \llbracket 
+  \begin{array}{l}
+    a \mapsto b \\
+    c \rightarrow a . b
+  \end{array} \right \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: a \mapsto b \:\: \rrbracket \\
+  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: c \rightarrow a.b \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} \mathbb{E}_{R} \llbracket \:\: a \mapsto b \:\: \rrbracket \\
+  \hspace*{1em} c \rightarrow \mathbb{E}_{R} \llbracket \:\: a.b \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} a \rightarrow b \\
+  \hspace*{1em} c \rightarrow (a \rightarrow b)
+$
+\caption{Module A4}
+\end{example}
+
+Note that a static definition can be converted into a run-time definition...???
+
+A definition may be converted into a query.
+E.g. $\mathbb{Q} \llbracket \:\: a \rightarrow b \:\: \rrbracket \Rightarrow a.b$
+
+
+\section{Trace semantics (2010-01-20)}
+
+Note that although expansion details state transitions (process flow), most states will not be ignored in the final program because they do not yield any \emph{side-effects}.
+
+Let us define a very simple side effect which basically outputs only a string. The final output will basically consist of the strings in the main thread concatenated together.
+Such a string can be tagged as an effect by prepending the $Effect$ annotation to it (e.g. $Effect \mapsto "This string will be output..."$).
+In turn the main thread will be tagged with the $Main$ annotation.
+(Note: changing the meaning of $E_{C}$ slightly here and making it somewhat more accurate to correspond with the actual compilation process)
+
+\begin{example}[H]
+$
+  \hspace*{1em}
+  \mathbb{E}_{C} \left \llbracket
+  \begin{array}{l}
+    a \rightarrow Effect \mapsto \texttt{"Hello world: "} \\
+    b \rightarrow Effect \mapsto \texttt{"This is a string"} \\
+    c \rightarrow Effect \mapsto \texttt{"... And now we're done"} \\
+    d \rightarrow Effect \mapsto \texttt{"This string won't be output!"} \\
+    Main \mapsto a \rightarrow b \rightarrow c
+  \end{array} \right \rrbracket \\\\
+\Rightarrow \\\\
+%  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: a \rightarrow (Effect \mapsto \texttt{"Hello world: "}) \:\: \rrbracket \\
+%  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: b \rightarrow (Effect \mapsto \texttt{"This is a string"}) \:\: \rrbracket \\
+%  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: c \rightarrow (Effect \mapsto \texttt{"... And now we're done"}) \:\: \rrbracket \\
+%  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: d \rightarrow (Effect \mapsto \texttt{"This string won't be output!"}) \:\: \rrbracket \\\\
+  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: Main \mapsto a \rightarrow b \rightarrow c \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto \mathbb{E}_{C} \llbracket \:\: a \rightarrow b \rightarrow c \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow \mathbb{E}_{C} \llbracket \:\: Effect \mapsto \texttt{"Hello world: "} \:\: \rrbracket \\
+  \hspace*{1em} \rightarrow \mathbb{E}_{C} \llbracket \:\: b \rightarrow c \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Hello world: "} \\
+  \hspace*{1em} \rightarrow b \rightarrow \mathbb{E}_{C} \llbracket \:\: Effect \mapsto \texttt{"This is a string"} \:\: \rrbracket\\
+  \hspace*{1em} \rightarrow \mathbb{E}_{C} \llbracket \:\: c \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Hello world: "} \\
+  \hspace*{1em} \rightarrow b \rightarrow Effect \mapsto \texttt{"This is a string"} \\
+  \hspace*{1em} \rightarrow c \rightarrow \mathbb{E}_{C} \llbracket \:\: Effect \mapsto \texttt{"... And now we're done"} \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Hello world: "} \\
+  \hspace*{1em} \rightarrow b \rightarrow Effect \mapsto \texttt{"This is a string"} \\
+  \hspace*{1em} \rightarrow c \rightarrow Effect \mapsto \texttt{"... And now we're done"}
+$
+\caption{Module A5}
+\end{example}
+
+To make it more interesting, we'll add funcion application to the example...
+
+\begin{example}[H]
+$
+  \hspace*{1em}
+  \mathbb{E}_{C} \left \llbracket
+  \begin{array}{l}
+    a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+    b \rightarrow Effect \mapsto \texttt{"twice"} \\
+    Main \mapsto a \rightarrow [x \rightarrow x]::[x \rightarrow b]
+  \end{array} \right \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} \mathbb{E}_{C} \llbracket \:\: Main \mapsto a \rightarrow [x \rightarrow x]::[x \rightarrow b] \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto \mathbb{E}_{C} \llbracket \:\: a \rightarrow [x \rightarrow x]::[x \rightarrow b] \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow \mathbb{E}_{C} \llbracket \:\: Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \:\: \rrbracket \\
+  \hspace*{1em} \rightarrow \mathbb{E}_{C} \llbracket \:\: [x \rightarrow x]::[x \rightarrow b] \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow \mathbb{E}_{C} \llbracket \:\: [x \rightarrow x]::[x \rightarrow b] \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow \mathbb{E}_{C} \llbracket \:\: (x \rightarrow b) \rightarrow (x \rightarrow b) \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow \mathbb{E}_{C} \llbracket \:\: (x \rightarrow b)  \:\: \rrbracket \rightarrow \mathbb{E}_{C} \llbracket \:\: (x \rightarrow b) \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow x \rightarrow \mathbb{E}_{C} \llbracket \:\: b \:\: \rrbracket \rightarrow \mathbb{E}_{C} \llbracket \:\: (x \rightarrow b) \:\: \rrbracket \\\\
+$
+
+$
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow x \rightarrow b \rightarrow \mathbb{E}_{C} \llbracket \:\: Effect \mapsto \texttt{"twice"} \:\: \rrbracket \rightarrow \mathbb{E}_{C} \llbracket \:\: (x \rightarrow b) \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow x \rightarrow b \rightarrow Effect \mapsto \texttt{"twice"} \rightarrow \mathbb{E}_{C} \llbracket \:\: (x \rightarrow b) \:\: \rrbracket \\\\
+\Rightarrow \\\\
+  \hspace*{1em} Main \\
+  \hspace*{1em} \mapsto a \rightarrow Effect \mapsto \texttt{"Print out \textbackslash"twice\textbackslash" twice: "} \\
+  \hspace*{1em} \rightarrow x \rightarrow b \rightarrow Effect \mapsto \texttt{"twice"} \rightarrow x \rightarrow \mathbb{E}_{C} \llbracket \:\: b \:\: \rrbracket \\\\
+$
+\caption{Module A5}
+\end{example}
+
+
+\section{Token representation (2010-01-20)}
+
+Take the following program definition:
+\begin{example}[H]
+$a \rightarrow b\\
+c \rightarrow a\\
+d \rightarrow a.b\\
+e \rightarrow c.b$
+\caption{tokens}
+\end{example}
+
+Tokens are represented as follows
+\begin{table}[!ht]\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Expression} & \textbf{Direct anotation}                                                    & \textbf{Clever annotation} & \textbf{Result} \\
+\hline
+$a \rightarrow b$   & $a \rightarrow $ $ _{a \rightarrow}b$                                        & & \\
+$c \rightarrow a$   & $c \rightarrow $ $ _{b \rightarrow}a$                                        & & \\
+$d \rightarrow a.b$ & $d \rightarrow $ $ _{[d \rightarrow]}a$ $.$ $_{[d \rightarrow] a \rightarrow}b$ & $d \rightarrow $ $_{[d \rightarrow] a \rightarrow}b$ & $d \rightarrow $ $_{d \rightarrow a \rightarrow}b$ \\
+$e \rightarrow c.b$ & $e \rightarrow $ $ _{[e \rightarrow]}c$ $.$ $_{[e \rightarrow] c \rightarrow}b$ & $e \rightarrow $ $_{[e \rightarrow] c \rightarrow}b$ & $e$  \\
+\hline
+\end{tabular}
+\caption{Potential token representation for conjunct selection}
+\end{table}
+
+Where the two tokens annotated with $_{[\textellipsis]}$ are speculative. I.e. not \emph{concrete} tokens...
+When resolving tokens one may remove annotations, but you may not add any.
+For example if $a_{b \rightarrow}$ exists then $_{[b \rightarrow f \rightarrow g \rightarrow]}a$ will be resolved to $_{b \rightarrow}a$ at compile time.
+Similarly if $_{b \rightarrow}a$ exists then $_{[b \rightarrow f \rightarrow g \rightarrow]}a$ will be resolved to $_{b \rightarrow}a$ at compile time.
+However, $_{[f \rightarrow b \rightarrow]}a$ will not (unless $_{f \rightarrow}a$ or $a$ exists of course).
+
+In the clever annotation there is no need for both arguments since it's part of the type... (so we throw away the domain to select from)
+
+\begin{table}[!ht]\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Expression} & \textbf{Direct anotation}                                                    & \textbf{Clever annotation} & \textbf{Result} \\
+\hline
+$a \rightarrow b$   & $a \rightarrow $ $ _{a \rightarrow}b$                                        & & \\
+$c \rightarrow a$   & $c \rightarrow $ $ _{b \rightarrow}a$                                        & & \\
+$d \rightarrow c \oplus f$ & $d \rightarrow $ $ _{[d \rightarrow]}c$ $\oplus$ $_{[d \rightarrow] f \rightarrow}b$ & $d \rightarrow $ $_{[d \rightarrow] f \rightarrow}b$ & $d \rightarrow $ $_{d \rightarrow c \rightarrow}f$\\
+$e \rightarrow a \oplus b$ & $e \rightarrow $ $ _{[e \rightarrow]}a$ $\oplus$ $_{[e \rightarrow] a \rightarrow}b$ & $e \rightarrow $ $_{[e \rightarrow] a \rightarrow}b$ & $e$ \\
+\hline
+\end{tabular}
+\caption{Potential token representation for disjunct selection}
+\end{table}
+
+\begin{comment}
 \section{Introduction}
 
 \subsection{The nature of computation}
@@ -75,30 +319,130 @@ Hence programming expressions are recast in terms of `definitions' and `queries'
 \item \emph { An axoimatic foundation of choice: Zermelo–Fraenkel set theory  - Note the foundational crisis of mathematics.}
 \end{itemize}
 
+\subsubsection{ The Curry-Howard correspondence }
+
 \subsection{Pragmatics}
-\subsubsection{Computer languages}
-
 While proof of universality for a combination of operations allow us to identify the languages in which all known computation is \emph{possible} it is not the only metric by which we can measure the pragmatic importance of such a system.
-These metrics are necesarily subjective requirements that must be specified rather than derived.
+These metrics are necesarily subjective requirements that must be specified before-hand as design constraints.
 
+\subsubsection{Expressiveness}
 \begin{itemize}
-\item Expressivenes: The level of self-reference available to a programming language.
+\item Expressivenes as the level of self-reference available to a programming language.
 \end{itemize}
 
-\section{Introduction}
+\subsubsection{Proofs as programs and type systems}
+
+\subsection{Previous work}
+
+\end{comment}
+
+\section{Alternative `not' semantics (2010-02-04)}
+Many different operators become cumbersome. Ideally we would have liked to stick to `\em{.}' and `\em{:}' for queries.
+It may be possible to replace operators such as `\em{~}' and `\em{!}'.
+
+We could create annotated tokens such as $not token$ which exists in some domain whenever $token$ does not.
+For example in $dom = [ foo ]$,  $dom.foo$ exists, however $dom.val$ does not. But $dom.(not val)$.
+$not val$ is a new token which is always present whenever $val$ is not.
+
+
+Alternatively $not dom.val$ or $(not dom).val$.
+What about mutations. E.g. $dom:[foo = bar]$.
+Can we say $dom:not[ val = 5 ]$. Seems more intuitive to say $dom~[ val = 5 ]$. Perhaps \em{~} means `append'.
+
+
+\section{Simple `Eval' semantics (2010-02-04)}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow a \\
+    eval(c) = c \rightarrow a \rightarrow b
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow a.b \\
+    eval(c) = c \rightarrow b
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow a.d \\
+    eval(c) = c
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow a \\
+    d \rightarrow c \\
+    eval(d) = d \rightarrow c \rightarrow a \rightarrow b
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    d \rightarrow c \rightarrow a \rightarrow b \\
+    eval(d) = d \rightarrow c \rightarrow a \rightarrow b
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    d \rightarrow
+    \left [ \begin{array}{l}
+      a \rightarrow b \\
+      c \rightarrow a \\
+    \end{array} \right ] \\
+    eval(d) = d \rightarrow 
+    \left [ \begin{array}{l}
+      a \rightarrow b \\
+      c \rightarrow a \rightarrow b \\
+    \end{array} \right ] \\
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\section{Overview}
+
+\begin{comment}
 In the initial sections of this paper we will ignore certain existing. In the final sections a comparison with the existing theories is provided.
 
-\section{Concepts}
+\subsection{Concepts}
 
 \begin{itemize}
 \item Curry-Howard correspondence: Once one starts investigating, similar correspondences can be found in a very wide range of programming concepts.
 \end{itemize}
 
+\end{comment}
+
 \subsection{Defintion and queries}
 \subsubsection{Existence as the fundamental assertion}
 We propose that the most fundamental definition that can be understood is an assertion of existence. 
 By simply listing any unreserved token in our language, we will claim that it exists in some \emph{context}.
-Where this idea is used mathematical notation or requires explicit elucidation in commentary it will be indicated using the $\exists$ symbol.
+Where this idea is used in mathematical notation or if explicit mention is required in commentary it will be indicated using the $\exists$ symbol.
 For example, an assertion that the user-defined token $a$ exists will be written $\exists a$ in the documentation.
 Inversely, claiming that $a$ does not exist can be indicated as $\nexists a$.
 Mathematically the assertion that multiple tokens exists can be indicated in a single expression in this fashion: $\exists a \land \exists b \land \exists c$.
@@ -118,15 +462,16 @@ In our basic language, simply listing these elements as \texttt{a b c} is equiva
 %Similarly any \emph{data} is simply an assertion of the existence of said data within the \emph{context} in which it is defined.
 
 \subsubsection{Source, state and denotational representations}
-The difference between mathematical formalism and computational formalism is that the mechanical procedure of converting data from one representation to another becomes relevant.
-In programming language design denotational semantics are used for the first whereas operational semantics is used for the second.
+%The difference between mathematical formalism and computational formalism is that the mechanical procedure of converting data from one representation to another becomes relevant.
+The difference between mathematical formalism and computational formalism is that not only the result of a computation, but also the mechanism to arive at a result becomes relevant.
+In programming language design denotational semantics is typically used to describe the first whereas operational semantics has some correspondence to the second.
 
 Our approach in this paper will be a little different. We will use an \emph{annotated} syntax to indicate various representations, giving the reader a concise idea of the domain that the data inhabits.
 
 Let us look again at our fundamental assertion of existence. There are three environments in which such an assertion must be considered.
 \begin{itemize}
-\item The first is the \emph{unoccupied} representation $\textlquill$a b c$\textrquill$
-\item An \emph{occupied} representation $\rightarrow$ <<a b c>>.
+\item The first is the \emph{unoccupied} representation $>>a b c<<$ %$\textlquill$a b c$\textrquill$
+\item An \emph{occupied} representation $\rightarrow <<a b c>>$.
 \item ... 
 \end{itemize}
 We have already given a 
@@ -224,6 +569,8 @@ $a = [(x = i) (y = j)]$
 
 \subsubsection{ A comparison with structural (operational) semantics }
 
+
+
 %---
 %$a$
 
@@ -249,8 +596,6 @@ $a = [(x = i) (y = j)]$
 %a
 %a.b = d
 %a.c = e
-
-
 
 \section*{Assertions as type systems}
 "Labeling"
