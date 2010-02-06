@@ -1,5 +1,5 @@
-latex langlangspec
-bibtex langlangspec
-latex langlangspec
-pdflatex langlangspec.tex
-evince langlangspec.pdf
+latex langlangspec01
+bibtex langlangspec01
+latex langlangspec01
+pdflatex langlangspec01.tex
+evince langlangspec01.pdf
