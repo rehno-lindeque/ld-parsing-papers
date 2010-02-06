@@ -32,6 +32,11 @@
 
 %%%%%%%%%%%%%%%%%%%% MACROS %%%%%%%%%%%%%%%%%%%%
 
+
+\floatstyle{boxed}
+\newfloat{example}{thp}{lop}
+\floatname{example}{Example}
+
 %%%%%%%%%%%%%%%%%%%%%Stuff from SICL article%%%%%%
 
 %%%%%%%%%%%%%%%%%%% DOCUMENT %%%%%%%%%%%%%%%%%%%
@@ -42,14 +47,39 @@
 
 \maketitle
 
+\tableofcontents
+
 \section{Introduction}
 This document is intended as a specification for implementers to write implementations against. For language design and rationalle see \cite{ctxfoundation} and \cite{ctxrationalle}.
 
 \section{Issues}
-\textbf{Issue 1.1} Should nested contexts overide parent contexts or only add information?\\
-\indent \textbf{Discussion:}\\
-\indent \indent Suppose nested 2 nested contexts are used. \\
-\indent \textbf{Resolved (2010-02-??)}
+
+\paragraph{Issue 1.1 -- Should nested contexts overide parent contexts or only add information?}
+
+\subparagraph{Status:} Open
+
+\subparagraph{Discussion (2010-02-06):}
+Suppose 2 nested contexts, $a$ and $b$ are defined with a simple relation $x$ in each as illustrated bellow.
+\begin{example}[H]
+$
+  a = \left [ \begin{array}{l}
+    x = 4 \\
+    b = [x = 5]
+  \end{array} \right ] \\\\
+  a:b:x:5 \text{\quad\{ This will always be true. \}} \\
+  a:b:x:4 \text{\quad\{ But does x inherrit the relation in $a:x$ as well? \}}
+$
+\caption{Nested domains with similar variables}
+\end{example}
+
+A user may expect nesting to override values defined in a parent context, however it seems desirable to have the ability to extend sets from parent contexts.
+
+\subparagraph{Resolved (2010-02-??):}
+
+\listoftables
+
+\listoffigures
+
 \bibliographystyle{plain}
 \bibliography{langlangspec01}
 
