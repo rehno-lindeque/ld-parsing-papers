@@ -135,17 +135,17 @@ Bottom-up techniques, on the other hand, attempt to deduce the leaf nodes of the
 Theoretically this gives such a parser access to more contextual information %[citation needed] 
 as the derivation of a production is delayed until its contents has been recognized.
 However, a bottom-up parser may not always have enough information to derive a production even when the contents of such a production has been recognized. 
-Certain context-free grammars require tokens following the the nonterminal to be recognized before it can decide whether the choice is really correct inside the context in which it is recognized\footnote{This concept should not be confused with the class of grammars known as \emph{context-sensitive} grammars which may have more than one token on the left-hand side of production rules.}.
+Certain context-free grammars require tokens following the nonterminal to be recognized before it can decide whether the choice is really correct inside the context in which it is recognized\footnote{This concept should not be confused with the class of grammars known as \emph{context-sensitive} grammars which may have more than one token on the left hand side of production rules.}.
 For this reason bottom-up parsers also typically employ lookahead in making such deductions.\\
 
 In \cite{knuth65} Knuth developed a body of theoretical knowledge around the concept of ``left-to-right parsers with rightmost derivation'' known in short as \emph{LR parsers}. 
-LR parsing captures the idea of directional bottom-up parsing with a concrete algorithm.
+LR parsing captures the idea of directional bottom-up parsing in a concrete algorithm.
 Over time many variants of LR parsing, such as LALR and SLR \cite{362625}, have been developed as well as some optimizations \cite{13326}.
 When classifying a grammar for LR parsing we usually refer to an $LR(k)$ grammar where $k$ indicates some fixed \emph{lookahead} value, allowing the parser to look forward in the stream of input tokens when deciding on the next action to take.
 However, the traditional approach to generating LR parsers with $k > 2$ has proven prohibitively difficult, leading most tools that employ LR or LALR techniques to restrict lookahead to very small values\footnote{Typical lookahead mechanisms used in LR(k) or LALR(k) parser generators have $k = 1$ or $k = 2$.}.
 Despite this limitation these tools produce some of the most efficient parsers and remain a popular choice amongst users.
 
-LL parsers or ``left-to-right parsers with left-most derivation'' are the directional top-down analog to LR parsers.
+LL parsers or ``left-to-right parsers with leftmost derivation'' are the directional top-down analog to LR parsers.
 Similar to $LR(k)$ grammars, a grammar may also be classified in the class \emph{LL(k)}.
 Once again $k$ indicates the minimum number of tokens that an LL parser would need to look ahead in order to recognize all the strings matching this grammar.\\
 
@@ -213,7 +213,7 @@ Discourse begins with some example traces exploring the application of delayed a
 Finally more formalized trace semantics are defined in preparation for future proofs.
 
 In the final sections of the paper, the implementation details of a parser driver and a protoype parser generator are discussed.
-Our findings are presented in the Results and Conclusions sections along with an overview of the topics that remain for the future work.
+Our findings are presented in the Results and Conclusions sections along with an overview of the topics that remain future work.
 
 \section{Delayed reductions}
 
@@ -223,7 +223,7 @@ There are three aspects of the parsing process that we are interested in and we 
 \begin{itemize}
 \item Recognition---The ability of a parser to recognize various sequences of tokens satisfying the language described by some grammar. By this definition recognition is not required to provide any output other than an assertion of the correctness of the syntax and possibly an indication of where an error might be located in the source.
 \item Translation---In the context of parsing, translation refers to the process of converting the source program from its original representation to the final output of the parser. The output of the parser is usually in the form of a \emph{concrete syntax tree} also commonly referred to as a \emph{parse tree}.
-\item Construction---The construction of a parser is handled by a separate algorithm responsible for automatically generating executable parsing code from the static grammar definition supplied by the user. A \emph{parser generator} tool will employ this algorithm before-hand in order to generate the parser.
+\item Construction---The construction of a parser is handled by a separate algorithm responsible for automatically generating executable parsing code from the static grammar definition supplied by the user. A \emph{parser generator} tool will employ this algorithm beforehand in order to generate the parser.
 \end{itemize}
 
 The \emph{grammar} of a language is a set of \emph{production rules} that is capable of generating any string in the language. 
@@ -235,9 +235,9 @@ Two types of tokens are used to define a grammar:
 \item \emph{Nonterminal tokens} correspond to non-leaf nodes in the syntax tree. Nonterminals are capitalized in order to distinguish them from terminals.
 \end{itemize}
 
-The rules in the grammar will be a set of strings in the form $A_1 \rightarrow x B \textellipsis$ where some finite number of terminals and nonterminals on the right-hand side are \emph{recognized} and then \emph{translated} to the nonterminal on the left-hand side.
-At times we may also refer to the original idea of a grammar, that the nonterminal on the left-hand side generates the strings in the language that can be matched to the right-hand side.
-A \emph{production} is the set of all rules that translate to the same nonterminal on their left-hand sides.
+The rules in the grammar will be a set of strings in the form $A_1 \rightarrow x B \textellipsis$ where some finite number of terminals and nonterminals on the right hand side are \emph{recognized} and then \emph{translated} to the nonterminal on the left hand side.
+At times we may also refer to the original idea of a grammar, that the nonterminal on the left hand side generates the strings in the language that can be matched to the right hand side.
+A \emph{production} is the set of all rules that translate to the same nonterminal on their left hand sides.
 In our work, whenever a nonterminal token is annotated with a numeric subscript, such as $A_1$ above, it identifies the token as the nonterminal recognized using a specific rule.\\
 
 Our basic strategy for parsing strings of lexical tokens proceeds in two passes.
@@ -245,7 +245,7 @@ The first is a \emph{recognition pass} with the additional constraint that rules
 The identifying rule tokens are placed into a temporary \emph{rules buffer} that grows in a stack-like manner, but also supports constant-time random-access operations.
 In the second pass---the \emph{translation pass}---the sequence of recognized production rules is used to build the final parse tree in a similar a manner to a LR parser, but without any recognition steps or lookahead.
 
-By separating these two aspects into distinct passes, the recognition pass is allowed the convenience of identifying the right-hand sides of production rules in a more flexible order. 
+By separating these two aspects into distinct passes, the recognition pass is allowed the convenience of identifying the right hand sides of production rules in a more flexible order. 
 However, the translation pass requires the rules buffer it is given to be correctly ordered when building the parse tree.
 For this purpose, the mechanism used to reorder rules relies on placeholder tokens in the rules buffer representing unresolved production rules.
 Whenever the parser must deduce a rule that cannot be fully determined, a placeholder token is appended to the rules buffer in its place. 
@@ -261,7 +261,7 @@ The following conditions specify certain constraints by which the recognition pa
 \item As rules are recognized they are placed in the rules buffer in a left-to-right order. 
 This corresponds with a bottom-up parsing strategy since production rules that are closer to the leaf nodes in the parse tree will normally be recognized before their parent rules are recognized.
 \item Delayed rules may only be resolved in a right-to-left order, corresponding with the top-down strategy of parsing. Rules near the root of the tree must be resolved before 
-the delayed rules near the leaf nodes can be resolved. 
+the delayed rules lower down can be resolved. 
 It is worth noting that, although the unresolved rules will only be resolved in a right-to-left order, rules may be added to the unresolved stack at any time.
 Intuitively the right-to-left rule resolution loop is nested inside the main left-to-right recognition loop, to be evaluated whenever the last delayed rule's lookahead has been completed.
 \end{itemize}
@@ -282,9 +282,9 @@ This array is automatically generated by a separate parser construction algorith
 \item $j$ is an index into the array of actions such that $actions_j$ refers to the current instruction being decoded.
 This index acts like a `program counter' for the interpreter.
 \item $rulesbu\!f\!f\!er$ is a dynamically growing array storing the output of recognition pass.
-\item $k$ is an index into the array of rules such that $k$ always points to the first unfilled element of the array.
+\item $k$ is an index into the array of rules such that $k$ always points to the first empty element of the array.
 \item $callstack$ is a dynamically growing stack for storing the current index of the parser in the $actions$ stream in order to return to it later.
-\item $l$ is an index into the call stack such that $l$ always points to the first unfilled element of the stack.
+\item $l$ is an index into the call stack such that $l$ always points to the top (first empty element) of the stack.
 %\item $continuations$ is a stack for storing the current index of the parser in the instruction table in order to return to it later.
 \item $error$ is a special error state which (in the absence of error recovery) will halt the parser and report a syntax error.
 \end{itemize}
@@ -342,7 +342,7 @@ By contrast, $shi\!ft$ operations do not make any significant contribution to th
 \texttt{reduce(rule)}\\
 The parameter given to the $reduce$ instruction is a \emph{rule token} representing some reference into the list of all production rules in the given grammar.
 A production in a grammar may be reduced from any number of different sequences of terminal tokens. However, a rule recognizes only one possible sequence of terminal tokens.
-In other words, given some rule token both the left-hand side and the right-hand side of the rule can be determined (although underlying data such as identifier names and literals must be stored separately).
+In other words, given some rule token both the left hand side and the right hand side of the rule can be determined (although underlying data such as identifier names and literals must be stored separately).
 For this reason we use rule numbers internally instead of recognizing productions directly.
 
 \begin{equation}
@@ -497,7 +497,7 @@ k \becomes k + 1;
 \end{enumerate}
 
 \subsection{Delayed actions}
-While the three operations discussed provide the necessary tools to recognize any non-recursive LR(0) grammar, they do not provide any manner of looking ahead into the input stream.
+While the three operations discussed provide the necessary tools to recognize any non-recursive LR(0) grammar, they do not provide any mechanism to look ahead into the input stream.
 Furthermore parsers using these instructions will exhibit exponential growth if no explicit $return$ operation is available.
 Some additional actions are provided to resolve these issues:
 \begin{itemize}
@@ -508,18 +508,18 @@ Some additional actions are provided to resolve these issues:
 \item In addition the \texttt{switch} operation is slightly modified to use the callstack.
 \end{itemize}
 
-Additional free variables are also needed for use by the extended instruction set.
+Additional free variables are also provided for use by the extended instruction set.
 
 \begin{itemize}
 \item $delays$ is a stack of indexes into the rules buffer.
-\item $m$ is an index into $delays$ such that $delays_m$ always refers to the first unfilled element of the stack.
+\item $m$ is an index into $delays$ such that $delays_m$ always refers to the top (first empty element) of the stack.
 \item $lasttarget$ is a index into the instruction stream recorded by the $switch$ operation as described below.
 \end{itemize}
 
 \subsubsection{The `delay' operation}
 \texttt{delay}\\
 The delay operation adds a placeholder token called $ignore$ to the rules buffer which may be replaced later.
-In addition the index of the placeholder is pushed onto the stack of delays.
+The index of the placeholder in the rules buffer is pushed onto the stack of delays.
 Note that the value of $ignore$ should be reserved so that it will not conflict with any rule number.
 \begin{equation}
 \infer{delays_m, m, j, rulesbu\!f\!f\!er_k, k \mapsto k, m+1, j+1, ignore, k+1}{actions_j = delay} \tag{Def 1.6}
@@ -529,7 +529,7 @@ Note that the value of $ignore$ should be reserved so that it will not conflict 
 \texttt{resolve(rule)}\\
 The resolve operation is similar to the reduce operation. 
 Instead of immediately pushing a rule token onto the stack of rules, it replaces the placeholder token previously pushed by a delay action.
-It may also push the special token $ignore$ which essentially means that the value at this position will remain unchanged and no reduction is necessary. 
+It may also store the same special token $ignore$ indicating that the value at this position will remain unchanged and no reduction is necessary. 
 Since the $resolve$ operation will pop the index of this placeholder token from the stack, this delay would not be re-evaluated again. 
 Resolving a placeholder using the $ignore$ token indicates that no reduction took place at this position and the translation pass should simply ignore this particular rule token.
 \begin{equation}
@@ -1130,7 +1130,7 @@ G \equiv \quad & A_1 \rightarrow x\\
 The set of traces can be expanded as follows.\\
 First add the empty trace to the set. 
 Take all the starting rules, in this case $S_1$ and $S_2$, and expand them.
-Next, take all nonterminals on the right-hand side and expand them once using all possible rules. 
+Next, take all nonterminals on the right hand side and expand them once using all possible rules. 
 
 For as long as some rules are incomplete, continue to expand them in the next iteration. This guarantees that the entire grammar can be enumerated in a single loop such that $lim_{n \to \infty} ET(G,n) = \top_{G}$.
 $IT(G, n)$ will represent all `incomplete' traces that need to go through more rounds of expansion before being added to the sets generated by $ET(G, n)$.
@@ -1380,7 +1380,7 @@ The initial state should contain the rules corresponding the root production of 
 \caption{An example root state node in the parser generator.}
 \end{figure}
 
-The period shown on the right-hand side of each rule is a cursor indicating the progress of the rule in a particular parser state.
+The period shown on the right hand side of each rule is a cursor indicating the progress of the rule in a particular parser state.
 For example, given an item $W_1 \rightarrow x . y$, this would indicate that the terminal $x$ has been recognized, and only $y$ remains to be parsed in order to recognize this rule.\\
 
 \subsubsection{Expanding a state node}
@@ -1442,7 +1442,7 @@ However, every duplicate state must be filtered so that only the rules partaking
 All other items are removed from the new state. %TODO: more detail on this "filter"??
 \end{itemize}
 
-\item Complete items --- An item is \emph{completed} once the cursor has moved past all remaining tokens on the right-hand side of the rule.
+\item Complete items --- An item is \emph{completed} once the cursor has moved past all remaining tokens on the right hand side of the rule.
 Once a $shi\!ft$ or a $switch$ has been generated, several items in the state may be completed. 
 A separate subroutine called $CompleteItems$ is responsible for handling these completed items.
 In the case of a $shi\!ft$ instruction, the items in the original state are completed whereas, in the case of a $switch$, each of the new states are processed by the routine.\\
@@ -1905,7 +1905,7 @@ The performance can be related to $n$, the number of input tokens, and $j$, the 
 
 Consider cases in which the grammar falls within the class $LR(k)$ for some fixed $k$.
 In the worst case the number of $reduce$ operations will be $(j - 1) \cdot n + 1$ since every token will be involved in at most $j$ productions, one of which has to be the root node of the parse tree.
-When the grammar is unambiguous the number of rules with only nonterminals on the right-hand side will necessarily be constant.
+When the grammar is unambiguous the number of rules with only nonterminals on the right hand side will necessarily be constant.
 Since every rule that is not one of these must consume at least one terminal, most analyses simply reduce $j$ to a constant term.
 Therefore, for all unambiguous grammars the number of $reduce$ operations is roughly linear with respect to the number of input tokens.
 
