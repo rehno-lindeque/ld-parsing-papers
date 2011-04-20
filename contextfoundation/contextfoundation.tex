@@ -38,7 +38,8 @@
 \begin{document}
 
 %\title{A formal foundation for programming language design}
-\title{Simple programs\\\small{(A formal foundation for programming languages)}}
+%\title{Simple programs\\\small{(A formal foundation for programming languages)}}
+\title{A formal foundation for context-driven declarative programming}
 \author{Rehno Lindeque}
 
 \maketitle
@@ -420,6 +421,53 @@ $
       a \rightarrow b \\
       c \rightarrow a \rightarrow b \\
     \end{array} \right ] \\
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow a.b \\ 
+    d \rightarrow c.b \\
+    eval(d) = d \rightarrow b
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \rightarrow c\\
+    d \rightarrow a.c \\
+    eval(d) = ??? \texttt{\{Not sure yet\textellipsis\}}
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \\
+    c \rightarrow d \rightarrow a \\ 
+    d \rightarrow c.b \\
+    eval(d) = ??? \texttt{\{Not sure yet\textellipsis\}}
+  \end{array}
+$
+\caption{Eval semantics}
+\end{example}
+
+\begin{example}[H]
+$
+  \begin{array}{l}
+    a \rightarrow b \rightarrow c \\
+    d \rightarrow e \rightarrow a \\ 
+    f \rightarrow d.c \\
+    eval(f) = ??? \texttt{\{Not sure yet\textellipsis\}}
   \end{array}
 $
 \caption{Eval semantics}
