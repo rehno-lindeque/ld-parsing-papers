@@ -1,0 +1,251 @@
+% PSCPROC2.STY, the style for Proceedings of the Prague Stringology Conference. 
+% It modifies the LLNCS class file of Springer Verlag LaTeX2e support for Lecture Notes in Computer Science.
+% Tested with LLNCS.CLS version 2.14 (17-Aug-2004)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\switcht@albion
+\def\figurename{Figure}
+\def\fnum@figure{\figurename~\thefigure}
+%
+\def\lin{\hspace{-\textwidth}\rule[-2mm]{\textwidth}{0.1mm}}
+\def\ps@myheadings{\let\@mkboth\@gobbletwo
+  \def\@oddhead{\hfil{\small\sl\rightmark}\lin}
+  \def\@oddfoot{\hfil\thepage\hfil}
+  \def\@evenhead{\rm{\small\sl\leftmark}\hfil\lin}
+  \def\@evenfoot{\hfil\thepage\hfil}
+  \def\sectionmark##1{}
+  \def\subsectionmark##1{}}
+\newcommand\leftheading[1]{\gdef\@leftheading{\hbox{\small\it\unboldmath\ignorespaces #1}}}
+\leftheading{Paper Submitted to PSC}
+\if@runhead\pagestyle{myheadings}\else\pagestyle{plain}\fi
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand\maketitle{\newpage
+  \refstepcounter{chapter}%
+  \stepcounter{section}%
+  \setcounter{section}{0}%
+  \setcounter{subsection}{0}%
+  \setcounter{figure}{0}
+  \setcounter{table}{0}
+  \setcounter{equation}{0}
+  \setcounter{footnote}{0}%
+  \begingroup
+    \parindent=\z@
+    \renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+    \if@twocolumn
+      \ifnum \col@number=\@ne
+        \@maketitle
+      \else
+        \twocolumn[\@maketitle]%
+      \fi
+    \else
+      \newpage
+      \global\@topnum\z@   % Prevents figures from going at top of page.
+      \@maketitle
+    \fi
+    \pagestyle{myheadings} % PSC
+    \thispagestyle{empty}\@thanks
+%
+    \def\\{\unskip\ \ignorespaces}\def\inst##1{\unskip{}}%
+    \def\thanks##1{\unskip{}}\def\fnmsep{\unskip}%
+    \instindent=\hsize
+    \advance\instindent by-\headlineindent
+    \if@runhead
+       \if!\the\titlerunning!\else
+         \edef\@title{\the\titlerunning}%
+       \fi
+       \global\setbox\titrun=\hbox{\small\it\unboldmath\ignorespaces\@title}% 
+       \ifdim\wd\titrun>\instindent
+          \typeout{Title too long for running head. Please supply}%
+          \typeout{a shorter form with \string\titlerunning\space prior to
+                   \string\maketitle}%
+          \global\setbox\titrun=\hbox{\small\rm
+          Title Suppressed Due to Excessive Length}%
+       \fi
+       \let\psc@title\@title %
+       \xdef\@title{\copy\titrun}%
+    \else
+      \let\psc@title\@title %
+    \fi
+%
+    \if!\the\tocauthor!\relax
+      {\def\and{\noexpand\protect\noexpand\and}%
+      \protected@xdef\toc@uthor{\@author}}%
+    \else
+      \def\\{\noexpand\protect\noexpand\newline}%
+      \protected@xdef\scratch{\the\tocauthor}%
+      \protected@xdef\toc@uthor{\scratch}%
+    \fi
+    \if!\the\toctitle!\addcontentsline{toc}{title}{\psc@title \ {\it by \toc@uthor}}\else % 
+      \addcontentsline{toc}{title}{\the\toctitle \ {\it by \toc@uthor}}%
+    \fi%
+    \if@runhead
+       \if!\the\authorrunning!
+         \value{@inst}=\value{@auth}%
+         \setcounter{@auth}{1}%
+       \else
+         \edef\@author{\the\authorrunning}%
+       \fi
+       \global\setbox\authrun=\hbox{\small\unboldmath\@author\unskip}%
+       \ifdim\wd\authrun>\instindent
+          \typeout{Names of authors too long for running head. Please supply}%
+          \typeout{a shorter form with \string\authorrunning\space prior to
+                   \string\maketitle}%
+          \global\setbox\authrun=\hbox{\small\rm
+          Authors Suppressed Due to Excessive Length}%
+       \fi
+       \xdef\@author{\copy\authrun}%
+       \markboth{\@leftheading}{\@title}% 
+     \fi
+  \endgroup
+  \setcounter{footnote}{0}%
+  \clearheadinfo}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\keywordname{{\bf Keywords:}}
+\newenvironment{keywords}{%
+  \list{}{\advance\topsep by 10pt\relax\small
+  \leftmargin=1cm
+  \labelwidth=\z@
+  \listparindent=\z@
+  \itemindent\listparindent
+  \rightmargin\leftmargin}\item[\hskip\labelsep
+                                \bfseries\keywordname]%
+  }{\endlist}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand\@ptsize{2} %
+\renewcommand\normalsize{%
+   \@setfontsize\normalsize\@xiipt{14.5}%
+   \abovedisplayskip 12\p@ \@plus3\p@ \@minus7\p@
+   \abovedisplayshortskip \z@ \@plus3\p@
+   \belowdisplayshortskip 6.5\p@ \@plus3.5\p@ \@minus3\p@
+   \belowdisplayskip \abovedisplayskip
+   \let\@listi\@listI}
+\normalsize
+\renewcommand\small{%
+   \@setfontsize\small\@xpt\@xiipt
+   \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+   \abovedisplayshortskip \z@ \@plus3\p@
+   \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+   \def\@listi{\leftmargin\leftmargini
+               \topsep 6\p@ \@plus2\p@ \@minus2\p@
+               \parsep 3\p@ \@plus2\p@ \@minus\p@
+               \itemsep \parsep}%
+   \belowdisplayskip \abovedisplayskip
+}
+\renewcommand\footnotesize{%
+   \@setfontsize\footnotesize\@xpt\@xiipt
+   \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+   \abovedisplayshortskip \z@ \@plus3\p@
+   \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+   \def\@listi{\leftmargin\leftmargini
+               \topsep 6\p@ \@plus2\p@ \@minus2\p@
+               \parsep 3\p@ \@plus2\p@ \@minus\p@
+               \itemsep \parsep}%
+   \belowdisplayskip \abovedisplayskip
+}
+\renewcommand\scriptsize{\@setfontsize\scriptsize\@viiipt{9.5}}
+\renewcommand\tiny{\@setfontsize\tiny\@vipt\@viipt}
+\renewcommand\large{\@setfontsize\large\@xivpt{18}}
+\renewcommand\Large{\@setfontsize\Large\@xviipt{22}}
+\renewcommand\LARGE{\@setfontsize\LARGE\@xxpt{25}}
+\renewcommand\huge{\@setfontsize\huge\@xxvpt{30}}
+\let\Huge=\huge
+\if@twocolumn
+  \setlength\parindent{1em}
+\else
+  \setlength\parindent{1.5em}
+\fi
+\setlength\smallskipamount{3\p@ \@plus 1\p@ \@minus 1\p@}
+\setlength\medskipamount{6\p@ \@plus 2\p@ \@minus 2\p@}
+\setlength\bigskipamount{12\p@ \@plus 4\p@ \@minus 4\p@}
+%Size of A4 paper: 210x297 mm = 597,50787 x 845,04685 pt
+\setlength{\paperwidth} {598pt}
+\setlength{\paperheight}{845pt}
+%
+\setlength{\voffset}    {-30pt}
+\setlength{\textheight} {686pt}
+\setlength{\textwidth}  {433pt}
+%
+\setlength\headheight{12\p@}
+\setlength\headsep   {1.5\baselineskip}
+\setlength\topmargin {0.27pt}
+\setlength\topskip   {12\p@}
+\setlength\footskip  {30\p@}
+\if@twocolumn
+  \setlength\marginparsep{10\p@}
+\else
+  \setlength\marginparsep{10\p@}
+\fi
+\if@twoside
+  \setlength\@tempdima        {\paperwidth}
+  \addtolength\@tempdima      {-\textwidth}
+  \setlength\evensidemargin    {.35\@tempdima}
+  \addtolength\evensidemargin  {-1in}
+  \setlength\marginparwidth   {.35\@tempdima}
+  \addtolength\marginparwidth {-\marginparsep}
+\else
+  \setlength\@tempdima        {\paperwidth}
+  \addtolength\@tempdima      {-\textwidth}
+  \setlength\evensidemargin    {.5\@tempdima}
+  \addtolength\evensidemargin  {-1in}
+  \setlength\marginparwidth   {.5\@tempdima}
+  \addtolength\marginparwidth {-\marginparsep}
+  \addtolength\marginparwidth {-0.4in}
+  \addtolength\marginparwidth {-.4in}
+\fi
+\ifdim \marginparwidth >2in
+   \setlength\marginparwidth{2in}
+\fi
+\@settopoint\evensidemargin
+\@settopoint\marginparwidth
+\setlength\oddsidemargin  {\paperwidth}
+\addtolength\oddsidemargin{-2in}
+\addtolength\oddsidemargin{-\textwidth}
+\addtolength\oddsidemargin{-\evensidemargin}
+\@settopoint\oddsidemargin
+%
+\setlength\marginparpush{7\p@}
+\setlength\maxdepth{.5\topskip}
+\setlength\footnotesep{8.4\p@}
+\setlength{\skip\footins}{10.8\p@ \@plus 4\p@ \@minus 2\p@}
+\setlength\floatsep    {12\p@ \@plus 2\p@ \@minus 4\p@}
+\setlength\textfloatsep{20\p@ \@plus 2\p@ \@minus 4\p@}
+\setlength\intextsep   {14\p@ \@plus 4\p@ \@minus 4\p@}
+\setlength\dblfloatsep    {14\p@ \@plus 2\p@ \@minus 4\p@}
+\setlength\dbltextfloatsep{20\p@ \@plus 2\p@ \@minus 4\p@}
+\setlength\@fptop{0\p@ \@plus 1fil}
+\setlength\@fpsep{10\p@ \@plus 2fil}
+\setlength\@fpbot{0\p@ \@plus 1fil}
+\setlength\@dblfptop{0\p@ \@plus 1fil}
+\setlength\@dblfpsep{10\p@ \@plus 2fil}
+\setlength\@dblfpbot{0\p@ \@plus 1fil}
+\setlength\partopsep{3\p@ \@plus 2\p@ \@minus 2\p@}
+%
+\def\@listiv {\leftmargin\leftmarginiv
+              \labelwidth\leftmarginiv
+              \advance\labelwidth-\labelsep}
+\def\@listv  {\leftmargin\leftmarginv
+              \labelwidth\leftmarginv
+              \advance\labelwidth-\labelsep}
+\def\@listvi {\leftmargin\leftmarginvi
+              \labelwidth\leftmarginvi
+              \advance\labelwidth-\labelsep}
+%%%%%%%%%%%%%%%%%%
+\renewcommand\part{%
+  \if@twocolumn
+    \onecolumn
+    \@tempswatrue
+  \else
+    \@tempswafalse
+  \fi
+  \secdef\@part\@spart}
+\def\@part[#1]#2{%
+  \ifnum \c@secnumdepth >-2\relax
+    \refstepcounter{part}%
+    \addcontentsline{toc}{part}{#1}%
+  \else
+    \addcontentsline{toc}{part}{#1}%
+  \fi
+  \markboth{}{}%
+}
+\def\@spart#1{}
+
+\endinput
