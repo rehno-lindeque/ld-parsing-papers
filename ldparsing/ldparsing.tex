@@ -1,6 +1,17 @@
 \documentclass[envcountsame,runningheads]{llncs}
 \usepackage{pscproc2}
-\usepackage{url}
+%\usepackage{url}
+
+%\usepackage{tikz}
+%\usepackage{geometry}
+%\geometry{a4paper}
+%\usepackage{gcl}
+%\usepackage{float}
+%\usepackage{wrapfig}
+\usepackage{proof}
+%\usepackage{amssymb}
+%\usepackage{amsthm}
+\usepackage{amsmath}
 
 
 % This is the shorter version of the technical report on "left-to-right parsing with delayed reductions" for the Prague Stringology Conference
@@ -23,6 +34,29 @@ LD parser, recursive-ascent parser, context-free grammar, parser generator, bott
 \end{keywords}
 
 \section{Introduction}
+
+[todo]
+
+The remainder of this paper will be structured as follows. 
+The operational semantics for a small, domain specific instruction set is developed.
+[todo]
+
+\section{Delayed reductions}
+
+Our parsing strategy is divided into two passes.
+[todo]
+
+\subsection{Operational semantics}
+
+\begin{equation}
+\infer{i, j \mapsto i+1, j+1}{input_i = a & actions_j = shift(a)} \tag{shift}
+\end{equation}
+
+\begin{equation}
+\infer{parserstate \mapsto error}{input_i = a & actions_j = shift(b)} \tag{shift-error}
+\end{equation}\\
+
+\subsection{Trace semantics}
 
 
 \section{Results}
