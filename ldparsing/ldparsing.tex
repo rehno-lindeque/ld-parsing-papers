@@ -54,7 +54,35 @@ Our parsing strategy is divided into two passes.
 
 \begin{equation}
 \infer{parserstate \mapsto error}{input_i = a & actions_j = shift(b)} \tag{shift-error}
-\end{equation}\\
+\end{equation}
+
+\begin{equation}
+\infer{i, j, lasttarget, callstack_l, l \mapsto i+1, A_{input_i}, A_{input_i}, j+1, l+1}{input_i \in A & actions_j = switch(A)} \tag{switch}
+\end{equation}
+
+\begin{equation}
+\infer{parsestate \mapsto error}{input_i \notin A & actions_j = switch(A)} \tag{switch-error}
+\end{equation}
+
+\begin{equation}
+\infer{j, rulesbu\!f\!f\!er_k, k \mapsto j+1, r, k+1}{actions_j = reduce(r)} \tag{reduce}
+\end{equation}
+
+\begin{equation}
+\infer{delays_m, m, j, rulesbu\!f\!f\!er_k, k \mapsto k, m+1, j+1, ignore, k+1}{actions_j = delay} \tag{delay}
+\end{equation}
+
+\begin{equation}
+\infer{l, j, rulesbu\!f\!f\!er_{delays_{m-1}}, m \mapsto l-1, j+1, r, m-1}{actions_j = resolve(r)} \tag{resolve}
+\end{equation}
+
+\begin{equation}
+\infer{j, l \mapsto callstack_{l-1}, l-1}{actions_j = return} \tag{return}
+\end{equation}
+
+\begin{equation}
+\infer{j \mapsto A_{lasttarget}}{lasttarget \in A & actions_j = goto(A)} \tag{goto}
+\end{equation}
 
 \subsection{Trace semantics}
 
