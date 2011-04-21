@@ -3,7 +3,7 @@
 
 % This is the shorter version of the technical report on "left-to-right parsing with delayed reductions" for the Prague Stringology Conference
 \begin{document}
-\title{Left-to-Right parsing with delayed reductions}
+\title{Left-to-right parsing with delayed reductions}
 \author{Rehno Lindeque \and Derrick Kourie}
 \institute{University of Pretoria\\
 \email{research@rehno.lindeque.name}
@@ -11,6 +11,10 @@
 \maketitle
 
 \begin{abstract}
+In this paper we suggest the use of delayed actions for parsing context-free languages.
+We develop tools to study and develop the semantics of a domain specific language for building parsers with delayed reductions.
+An informal proof shows that a parser implemented using our semantics will perform in linear time with respect to the number of lexical tokens.
+Finally a prototype parser generator is described, capable of automatically generating parsers for a subset of context-free grammars.
 \end{abstract}
 
 \begin{keywords}
@@ -23,6 +27,7 @@ LD parser, recursive-ascent parser, context-free grammar, parser generator, bott
 \section{Results}
 
 \section{Conclusions}
+An earlier technical report describing additional details of the parsing DSL and parser generator can be found in \cite{Lin11}.
 
 \section{Future work}
 
