@@ -134,25 +134,20 @@ Here $\sqsubseteq$ is defined as a total ordering on sets of traces such that
 
 In order to generate a trace continuously explores the entire grammar our procedure will expand its traces in a breadth-first manner.
 Hence $E(g,n)$ is defined in terms of two other functions. $I(G,n)$ holds all of the \emph{incomplete} traces that are yet to be generated while $Expand$ generates a new set of \emph{completed} traces from these.
-
 \begin{eqnarray}
 E(G, 0)   & \equiv & \{ \langle \rangle \} \\
 E(G, n+1) & \equiv & E(G, n) \cup Expand(I(G, n))
 \end{eqnarray}
 
 For example, consider the following grammar.
-
 {\small\begin{align*}
-G \equiv \quad & A_1 \rightarrow x\\
-               & B_1 \rightarrow x\\
-               & C_1 \rightarrow a\\
-               & C_2 \rightarrow y C\\
-               & D_1 \rightarrow b\\
-               & D_2 \rightarrow y D\\
-               & S_1 \rightarrow A C \$\\
-               & S_2 \rightarrow B D \$
+G \equiv \quad & A_1 \rightarrow a\\
+               & A_2 \rightarrow y C\\
+               & B_1 \rightarrow b\\
+               & B_2 \rightarrow y D\\
+               & S_1 \rightarrow A \$\\
+               & S_2 \rightarrow B \$
 \end{align*}}
-
 Note that every production rule has a \emph{rule number} subscript and $\$$ represents the \emph{end-of-stream} token.
 
 
