@@ -1152,15 +1152,15 @@ IT(G, 1) & = \{ \\
 \quad & \langle \mathbf{Expand(B_1)}, \mathbf{Expand(D_2)}, shift(\$), reduce(S_2) \rangle \\
 \quad & \}\\
 ET(G, 2) & = \{\\
-\quad & <>, \\
-\quad & <shift(x), reduce(A_1), shift(a), reduce(C_1), shift(\$), reduce(S_1)>,\\
-\quad & <shift(x), reduce(B_1), shift(b), reduce(D_1), shift(\$), reduce(S_2)>\\
+\quad & \langle \rangle, \\
+\quad & \langle shift(x), reduce(A_1), shift(a), reduce(C_1), shift(\$), reduce(S_1) \rangle,\\
+\quad & \langle shift(x), reduce(B_1), shift(b), reduce(D_1), shift(\$), reduce(S_2) \rangle\\
 \}\\
 IT(G, 2) & = \{ \\
-\quad & <shift(x), reduce(A_1), shift(y), \mathbf{Expand(C_1)}, reduce(C_2), shift(\$), reduce(S_1)>,\\
-\quad & <shift(x), reduce(A_1), shift(y), \mathbf{Expand(C_2)}, reduce(C_2), shift(\$), reduce(S_1)>,\\
-\quad & <shift(x), reduce(B_1), shift(y), \mathbf{Expand(D_1)}, reduce(D_2), shift(\$), reduce(S_2)>,\\
-\quad & <shift(x), reduce(B_1), shift(y), \mathbf{Expand(D_2)}, reduce(D_2), shift(\$), reduce(S_2)>\\
+\quad & \langle shift(x), reduce(A_1), shift(y), \mathbf{Expand(C_1)}, reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+\quad & \langle shift(x), reduce(A_1), shift(y), \mathbf{Expand(C_2)}, reduce(C_2), shift(\$), reduce(S_1) \rangle,\\
+\quad & \langle shift(x), reduce(B_1), shift(y), \mathbf{Expand(D_1)}, reduce(D_2), shift(\$), reduce(S_2) \rangle,\\
+\quad & \langle shift(x), reduce(B_1), shift(y), \mathbf{Expand(D_2)}, reduce(D_2), shift(\$), reduce(S_2) \rangle\\
  \}\\
  \textellipsis
 \end{align*}}
