@@ -133,23 +133,41 @@ Here $\sqsubseteq$ is defined as a total ordering on sets of traces such that
 \begin{equation} A \sqsubset B \quad \Longleftrightarrow \quad A \subset B\end{equation}
 
 In order to generate a trace continuously explores the entire grammar our procedure will expand its traces in a breadth-first manner.
-Hence $E(g,n)$ is defined in terms of two other functions. $I(G,n)$ holds all of the \emph{incomplete} traces that are yet to be generated while $Expand$ generates a new set of \emph{completed} traces from these.
+Hence $E(g,n)$ is defined in terms of two other functions. $I(G,n)$ holds all of the \emph{incomplete} traces that are yet to be explored while $Generate$ produces a new set of \emph{completed} traces from these.
 \begin{eqnarray}
 E(G, 0)   & \equiv & \{ \langle \rangle \} \\
-E(G, n+1) & \equiv & E(G, n) \cup Expand(I(G, n))
+E(G, n+1) & \equiv & E(G, n) \cup Generate(I(G, n))
 \end{eqnarray}
 
 For example, consider the following grammar.
 {\small\begin{align*}
 G \equiv \quad & A_1 \rightarrow a\\
-               & A_2 \rightarrow y C\\
+               & A_2 \rightarrow x A\\
                & B_1 \rightarrow b\\
-               & B_2 \rightarrow y D\\
+               & B_2 \rightarrow x B\\
                & S_1 \rightarrow A \$\\
                & S_2 \rightarrow B \$
 \end{align*}}
 Note that every production rule has a \emph{rule number} subscript and $\$$ represents the \emph{end-of-stream} token.
-
+The procedure for expanding this grammar will yield the following outputs. 
+{\small\begin{align*}
+E(G, 0) = \{ & \langle \rangle \}\\
+I(G, 0) = \{ & \langle \mathbf{Expand(S_1)} \rangle,\\
+             & \langle \mathbf{Expand(S_2)} \rangle \}\\
+E(G, 1) = \{ & \langle \rangle \}\\
+I(G, 1) = \{ & \langle \mathbf{Expand(A_1)}, shift(\$), reduce(S_1) \rangle,\\
+             & \langle \mathbf{Expand(A_2)}, shift(\$), reduce(S_1) \rangle,\\
+             & \langle \mathbf{Expand(B_1)}, shift(\$), reduce(S_2) \rangle, \\
+             & \langle \mathbf{Expand(B_1)}, shift(\$), reduce(S_2) \rangle \}\\
+E(G, 2) = \{ & \langle \rangle, \\
+             & \langle shift(a), reduce(A_1), shift(\$), reduce(S_1) \rangle,\\
+             & \langle shift(b), reduce(B_1), shift(\$), reduce(S_2) \rangle \}\\
+I(G, 2) = \{ & \langle shift(x), \mathbf{Expand(A_1)}, reduce(B_2), shift(\$), reduce(S_1) \rangle,\\
+             & \langle shift(x), \mathbf{Expand(A_2)}, reduce(B_2), shift(\$), reduce(S_1) \rangle,\\
+             & \langle shift(x), \mathbf{Expand(B_1)}, reduce(B_2), shift(\$), reduce(S_2) \rangle,\\
+             & \langle shift(x), \mathbf{Expand(B_2)}, reduce(B_2), shift(\$), reduce(S_2) \rangle \}\\
+\textellipsis
+\end{align*}}
 
 \section{A prototype parser generator}
 
