@@ -24,13 +24,14 @@
 
 \begin{abstract}
 In this paper we suggest the use of delayed actions for parsing context-free languages.
-We develop tools to study and develop the semantics of a domain specific language for building parsers with delayed reductions.
-An informal proof shows that a parser implemented using our semantics will perform in linear time with respect to the number of lexical tokens.
-Finally a prototype parser generator is described, capable of automatically generating parsers for a subset of context-free grammars.
+A domain specific language for parsers with delayed derivations is described.
+Programs expressed in this DSL are capable of parsing an undecidable class of grammars larger than $LR(k)$ for any fixed $k$.
+A simple proof shows that such a parser will always perform in linear time with respect to the number of lexical tokens.
+Finally an automatic parser generator is described, taking a context-free grammar as input.
 \end{abstract}
 
 \begin{keywords}
-LD parser, recursive-ascent parser, context-free grammar, parser generator, bottom-up parser, top-down parser, delayed reductions
+LD parser, recursive-ascent parser, context-free grammar, parser generator, bottom-up parser, top-down parser, delayed derivations
 \end{keywords}
 
 \section{Introduction}
@@ -61,7 +62,7 @@ The operational semantics for a small, domain specific instruction set is develo
 %Unlike previous research in this area we have also turned to tools from programming language theory in order clarify the semantics of our approach,
 %leading to a simple, intuitive understanding of how the parser works. (amenable to formal analysis) (This has lead us to define a domain specific language...)
 
-\section{Delayed reductions}
+\section{Delayed derivations}
 
 Our parsing strategy is divided into two passes.
 [todo]
