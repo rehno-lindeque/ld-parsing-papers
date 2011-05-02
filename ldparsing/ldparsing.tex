@@ -14,9 +14,9 @@
 \usepackage{amsmath}
 
 
-% This is the shorter version of the technical report on "left-to-right parsing with delayed reductions" for the Prague Stringology Conference
+% This is the shorter version of the technical report on "Implementing delayed actions in left-to-right parsing of context-free grammars" for the Prague Stringology Conference
 \begin{document}
-\title{Left-to-right parsing with delayed reductions}
+\title{Left-to-right parsing with delayed derivation}
 \author{Rehno Lindeque \and Derrick Kourie}
 \institute{University of Pretoria\\
 \email{research@rehno.lindeque.name}}
@@ -24,10 +24,10 @@
 
 \begin{abstract}
 In this paper we suggest the use of delayed actions for parsing context-free languages.
-A domain specific language for parsers with delayed derivations is described.
+The semantics of a domain specific language with the faculty of delayed reductions is described.
 Programs expressed in this DSL are capable of parsing an undecidable class of grammars larger than $LR(k)$ for any fixed $k$.
 A simple proof shows that such a parser will always perform in linear time with respect to the number of lexical tokens.
-Finally an automatic parser generator is described, taking a context-free grammar as input.
+Finally, a prototype for an automatic parser generator is described.
 \end{abstract}
 
 \begin{keywords}
@@ -170,6 +170,15 @@ I(G, 2) = \{ & \langle shift(x), \mathbf{Expand(A_1)}, reduce(B_2), shift(\$), r
 \textellipsis
 \end{align*}}
 
+\subsubsection{Incorporating lookahead.}
+
+Using the operational semantics defined before, we can extend the \emph{shift-reduce traces} delayed parsing actions.
+By showing that a trace with delayed actions is \emph{equivalent} to a shift-reduce trace, we can show that it parses the same grammar.
+Then all that remains is to show that an LD parser of finite length can be constructed to generate an equivalent trace.
+As traces may be infinite in length it is necessary to use inductive principles to construct a proof of equivalence.
+
+The first equivalence rule to note is that because \emph{recognition} and \emph{translation} is decoupled in a LD parser any pair of adjacent $shi\!ft$ and $reduce$ may be swapped.
+
 \section{A prototype parser generator}
 
 As it is not possible to determine whether a grammar will fall in a class of $LD$ grammars,
@@ -184,15 +193,15 @@ Practically this simply means that some termination condition must be supplied t
 By mechanically generating traces for the following grammars we are able to show which can be parsed successfully. [todo]
 
 \section{Conclusions}
-An earlier technical report describing additional details of the parsing DSL and parser generator can be found in \cite{Lin11}.
+An earlier unpublished report describing additional details of the parsing DSL and parser generator can be found in \cite{Lin11}.
 
 %The one disadvantage of this approach is that an entire file must be loaded... (but virtual memory and manual sectioning can offset this disadvantage)
 
 \section{Future work}
 
-It remains to develop a generalized LD parser for all context-free grammars, including those with ambiguities. 
+It remains to develop generalized LD parsers for all context-free grammars, including those with ambiguities. 
 Such GLD parsers would be equivalent in strength to GLR parsers, however it is hoped that such
-a development would demonstrate superior performance to previous methods.
+a development would result in superior performance and simpler implementations.
 
 \bibliographystyle{psc}
 \bibliography{ldparsing}
