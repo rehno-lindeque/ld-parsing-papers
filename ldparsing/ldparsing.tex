@@ -126,19 +126,19 @@ However, a naive algorithm may become `stuck' inside a subtrace and never explor
 
 Suppose that $\top_{G} \equiv traces(G)$, the---potentialy infinite---set of all possible of traces for the grammar and $\bot_{G} \equiv \{ \langle \rangle \}$ is the set containing the empty trace.
 Is there a function $E(G,n)$ such that the following relations will hold?
-\begin{equation} \bot_{G} \sqsubseteq E(G, n) \sqsubseteq E(G, n+1) \sqsubseteq \top_{G} \end{equation}
+\begin{equation*} \bot_{G} \sqsubseteq E(G, n) \sqsubseteq E(G, n+1) \sqsubseteq \top_{G} \end{equation*}
 and
-\begin{equation} lim_{n \to \infty} E(G,n) = \top_{G} \end{equation}
+\begin{equation*} lim_{n \to \infty} E(G,n) = \top_{G} \end{equation*}
 
 Here $\sqsubseteq$ is defined as a total ordering on sets of traces such that
-\begin{equation} A \sqsubset B \quad \Longleftrightarrow \quad A \subset B\end{equation}
+\begin{equation*} A \sqsubset B \quad \iff \quad A \subset B\end{equation*}
 
 In order to generate a trace continuously explores the entire grammar our procedure will expand its traces in a breadth-first manner.
 Hence $E(g,n)$ is defined in terms of two other functions. $I(G,n)$ holds all of the \emph{incomplete} traces that are yet to be explored while $Generate$ produces a new set of \emph{completed} traces from these.
-\begin{eqnarray}
+\begin{eqnarray*}
 E(G, 0)   & \equiv & \{ \langle \rangle \} \\
 E(G, n+1) & \equiv & E(G, n) \cup Generate(I(G, n))
-\end{eqnarray}
+\end{eqnarray*}
 
 For example, consider the following grammar.
 {\small\begin{align*}
@@ -177,7 +177,20 @@ By showing that a trace with delayed actions is \emph{equivalent} to a shift-red
 Then all that remains is to show that an LD parser of finite length can be constructed to generate an equivalent trace.
 As traces may be infinite in length it is necessary to use inductive principles to construct a proof of equivalence.
 
-The first equivalence rule to note is that because \emph{recognition} and \emph{translation} is decoupled in a LD parser any pair of adjacent $shi\!ft$ and $reduce$ may be swapped.
+Because \emph{recognition} and \emph{translation} is decoupled in a LD parser any pair of adjacent $shi\!ft$ and $reduce$ actions may be swapped.
+Furthermore notice that the action $reduce(A)$ action can be split into a $delay$ action followed by $resolve(A)$.
+This results in the following \emph{equivalence rules}.
+
+\begin{align*}
+&\langle ..., shi\!ft(x), reduce(A), ... \rangle  &\iff&& \langle ..., reduce(A), shi\!ft(x), ... \rangle \tag{eq-1}\\
+&\langle ..., reduce(A), ... \rangle              &\iff&& \langle ..., delay, resolve(A), ... \rangle \tag{eq-2}\\
+&\langle ..., shi\!ft(x), resolve(A), ... \rangle &\iff&& \langle ..., resolve(A), shi\!ft(x), ... \rangle \tag{eq-3}\\
+&\langle ..., shi\!ft(x), delay, ... \rangle      &\iff&& \langle ..., delay, shi\!ft(x), ... \rangle \tag{eq-4}
+\end{align*}
+
+Take note that control flow instructions such as $switch$, $goto$ and $return$ are not included.
+Specifically, $switch$ instructions conceptually generate $shi\!ft$ actions in the traces.
+
 
 \section{A prototype parser generator}
 
@@ -190,7 +203,76 @@ Practically this simply means that some termination condition must be supplied t
 
 \section{Results}
 
-By mechanically generating traces for the following grammars we are able to show which can be parsed successfully. [todo]
+Interestingly, testing whether it is possible to construct a parser of finite length is equivalent to proving termination for a parser generator that outputs the given parser.
+This fact corresponds with our earlier observation that the class of LD grammars is undecidable.
+Since proving termination is intractable in general, we must restrict ourselves to specific subclasses of the problem\footnote{Note that we can prove a grammar is in $LR(k)$ for some specific $k$ but not for any $k$.}.
+
+%[todo: prove via induction: "if this unknown production can be resolved (which is not decidable), then this lookahead can be found. (or if A and B distinct? etc)"
+
+%Unfortunately full proofs of the following subclasses is outside the scope of this paper.
+By mechanically generating traces for the following example grammars we are able to show several unambiguous forms that can be parsed successfully and one counter example that cannot.
+
+\begin{tabular}{|l|c|c|c|c|c|c|}
+  \hline
+  Example         & Class         & Lookahead      & LR(0) & LR(k) & LD  & GLR/Earley \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow a\\
+  & B_1 \rightarrow b\\
+  & S_1 \rightarrow A \$\\
+  & S_2 \rightarrow B \$
+  \end{aligned}$} & LR(0)         & none           & yes   & yes   & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & S_1 \rightarrow A a \$\\
+  & S_2 \rightarrow B b \$
+  \end{aligned}$} & LR(k)         & fixed          & no    & yes   & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & A_2 \rightarrow x A\\
+  & B_1 \rightarrow x\\
+  & B_2 \rightarrow B x\\
+  & S_1 \rightarrow A a \$\\
+  & S_2 \rightarrow B b \$
+  \end{aligned}$}  & Unambiguous  & outside cycle  & no    & no    & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & C_1 \rightarrow y\\
+  & C_2 \rightarrow C y\\
+  & S_1 \rightarrow A C a \$\\
+  & S_2 \rightarrow B C b \$
+  \end{aligned}$}  & Unambiguous  & contains cycle & no    & no    & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & C_1 \rightarrow a\\
+  & C_2 \rightarrow y C\\
+  & D_1 \rightarrow b\\
+  & D_2 \rightarrow y D\\
+  & S_1 \rightarrow A C \$\\
+  & S_2 \rightarrow B D \$
+  \end{aligned}$}  & Unambiguous  & inside cycle   & no    & no    & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & A_2 \rightarrow A C \\
+  & B_1 \rightarrow x\\
+  & B_2 \rightarrow B D\\
+  & C_1 \rightarrow y\\
+  & C_2 \rightarrow y C\\
+  & D_1 \rightarrow y\\
+  & D_2 \rightarrow y D\\
+  & S_1 \rightarrow A a \$\\
+  & S_2 \rightarrow B b \$
+  \end{aligned}$}  & Unambiguous  & outside nested cycles & no & no & no & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & S_1 \rightarrow A \$\\
+  & S_2 \rightarrow B \$
+  \end{aligned}$}  & Ambiguous    & none            & no    & no    & no & yes \\ \hline
+\end{tabular}
+
 
 \section{Conclusions}
 An earlier unpublished report describing additional details of the parsing DSL and parser generator can be found in \cite{Lin11}.
