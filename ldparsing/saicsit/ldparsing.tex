@@ -1,7 +1,5 @@
-\documentclass[envcountsame,runningheads]{llncs}
-\usepackage{pscproc2}
-%\usepackage{url}
-
+\documentclass[A4]{sig-alternate}
+\usepackage{url}
 %\usepackage{tikz}
 %\usepackage{geometry}
 %\geometry{a4paper}
@@ -13,13 +11,39 @@
 %\usepackage{amsthm}
 \usepackage{amsmath}
 
-
-% This is the shorter version of the technical report on "Implementing delayed actions in left-to-right parsing of context-free grammars" for the Prague Stringology Conference
+% This is the shorter version of the technical report on "Implementing delayed actions in left-to-right parsing of context-free grammars" for the SAICSIT 2011 conference
 \begin{document}
-\title{Left-to-right parsing with delayed derivation}
+\setcounter{page}{1}
+%
+% --- Author Metadata here ---
+\conferenceinfo{SAICSIT}{'11, October 3-5, Cape Town, South Africa}
+\CopyrightYear{2011} % Allows default copyright year (200X) to be over-ridden - IF NEED BE.
+\crdata{} % Allows default copyright data (0-89791-88-6/97/05) to be over-ridden - IF NEED BE.
+% --- End of Author Metadata ---
+
+\title{Left-to-right parsing with delayed derivation\titlenote{This paper is available online at \url{http://rehno.lindeque.name/research/}}}
 \author{Rehno Lindeque \and Derrick Kourie}
-\institute{University of Pretoria\\
-\email{research@rehno.lindeque.name}}
+
+
+\numberofauthors{2}
+\author{
+% 1st. author
+\alignauthor 
+Rehno Lindeque\\
+\email{research@rehno.lindeque.name}
+% 2nd. author
+\alignauthor
+Derick Kourie\\
+\affaddr{University of Pretoria}\\
+\email{dkourie@cs.up.ac.za}
+\and
+% 3rd. author
+\alignauthor
+Bruce Watson\\
+\affaddr{University of Pretoria}\\
+\email{bruce@bruce-watson.com}
+}
+
 \maketitle
 
 \begin{abstract}
@@ -29,6 +53,15 @@ Programs expressed in this DSL are capable of parsing an undecidable class of gr
 A simple proof shows that such a parser will always perform in linear time with respect to the number of lexical tokens.
 Finally, a prototype for an automatic parser generator is described.
 \end{abstract}
+
+\category{F.4.2}{Mathematical Logic and Formal Languages}{Grammars and Other Rewriting Systems}[parsing]
+\category{F.4.3}{Mathematical Logic and Formal Languages}{Formal Languages}[classes defined by grammars or automata]
+\category{D.2.8}{Software Engineering}{Metrics}[complexity measures, performance measures]
+\category{D.3.1}{Programming Languages}{Formal Definitions and Theory}[semantics]
+\category{D.3.4}{Programming Languages}{Processors}[code generation, parsing, translator writing systems and compiler generators]
+
+
+\terms{Algorithms, Languages, Theory, Performance}
 
 \begin{keywords}
 LD parser, recursive-ascent parser, context-free grammar, parser generator, bottom-up parser, top-down parser, delayed derivations
@@ -345,7 +378,6 @@ By mechanically generating traces for the following example grammars we are able
   & S_2 \rightarrow B \$
   \end{aligned}$}  & Ambiguous    & none            & no    & no    & no & yes \\ \hline
 \end{tabular}
-
 
 \section{Conclusions}
 An earlier unpublished report describing additional details of the parsing DSL and parser generator can be found in \cite{Lin11}.
