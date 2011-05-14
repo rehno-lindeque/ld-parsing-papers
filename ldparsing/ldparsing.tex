@@ -170,7 +170,7 @@ I(G, 2) = \{ & \langle shift(x), \mathbf{Expand(A_1)}, reduce(B_2), shift(\$), r
 \textellipsis
 \end{align*}}
 
-\subsubsection{Incorporating lookahead.}
+\subsubsection{Incorporating lookahead actions.}
 
 Using the operational semantics defined before, we can extend the \emph{shift-reduce traces} delayed parsing actions.
 By showing that a trace with delayed actions is \emph{equivalent} to a shift-reduce trace, we can show that it parses the same grammar.
@@ -182,14 +182,87 @@ Furthermore notice that the action $reduce(A)$ action can be split into a $delay
 This results in the following \emph{equivalence rules}.
 
 \begin{align*}
-&\langle ..., shi\!ft(x), reduce(A), ... \rangle  &\iff&& \langle ..., reduce(A), shi\!ft(x), ... \rangle \tag{eq-1}\\
-&\langle ..., reduce(A), ... \rangle              &\iff&& \langle ..., delay, resolve(A), ... \rangle \tag{eq-2}\\
-&\langle ..., shi\!ft(x), resolve(A), ... \rangle &\iff&& \langle ..., resolve(A), shi\!ft(x), ... \rangle \tag{eq-3}\\
-&\langle ..., shi\!ft(x), delay, ... \rangle      &\iff&& \langle ..., delay, shi\!ft(x), ... \rangle \tag{eq-4}
+&\langle ..., reduce(A), shi\!ft(x), ... \rangle  &\iff&& \langle ..., shi\!ft(x), reduce(A), ... \rangle  \tag{eq-1}\\
+&\langle ..., reduce(A), ... \rangle              &\iff&& \langle ..., delay, resolve(A), ... \rangle      \tag{eq-2}\\
+&\langle ..., resolve(A), shi\!ft(x), ... \rangle &\iff&& \langle ..., shi\!ft(x), resolve(A), ... \rangle \tag{eq-3}\\
+&\langle ..., delay, shi\!ft(x), ... \rangle      &\iff&& \langle ..., shi\!ft(x), delay, ... \rangle      \tag{eq-4}
 \end{align*}
 
 Take note that control flow instructions such as $switch$, $goto$ and $return$ are not included.
 Specifically, $switch$ instructions conceptually generate $shi\!ft$ actions in the traces.
+
+\subsubsection{Proof method.}
+
+Let $F\!I\!RST(ts)$ be the function that takes a set of traces $ts$ and returns the set that contains the first action of every non-empty trace.
+Let $FOLLOW(ts)$ be the function that returns the remainder of the $ts$ traces having their first actions removed.
+
+Suppose that we can find some $m$ such that $F\!I\!RST(E(G,m)) = \alpha$ and $F\!I\!RST(E(G,n)) = \alpha \Rightarrow FIRST(E(G,n+1)) = \alpha$ whenever $n \geq m$.
+Then $F\!I\!RST(traces(G)) = \alpha$ must hold, since $E(G,n) \subseteq E(G, n+1)$.
+
+It is also possible to use our equivalence rules with the traces. 
+Let $SW\!AP(t)$ be the function that swaps the first action of trace $t$ with the next action in the trace.
+The $SW\!AP$ function is only permissible when $SW\!AP(t)$ would remain equivalent to $t$ according to rules eq-1,3,4.
+Furthermore, when $t$ is empty or has only one action then $SW\!AP(t)$ is also undefined.
+
+$COLLATE(ts)$ will be the function on traces such that $SW\!AP$ is applied to each trace where eq-1,3,4 holds for the first two actions. \\
+
+Now let us consider the different ways in which we could prove that a LD parser would be finite.
+\begin{itemize}
+  \item Suppose that $F\!I\!RST(ts)$ is a set of only one action $\alpha$. 
+        Then it is clear that a finite parser can be used to generate that action in all of the non-empty traces\footnote{Empty traces may be ignored since all traces must end with a reduce action for one of the starting nonterminals.} in $ts$.
+        Once a single action has been identified for $F\!I\!RST(ts)$ then a finite parser could be constructed for the corresponding grammar if and only if a finite parser can be constructed for the remainder of the traces, $FOLLOW(ts)$.
+
+  \item Alternatively, if $F\!I\!RST(ts)$ consists of multiple $shi\!ft$ actions with different arguments\footnote{E.g. $\{\langle shi\!ft(x), ... \rangle, \langle shi\!ft(a), ... \rangle, ... \}$} then 
+        a single $switch$ action could be output. Then the task is to divide $FOLLOW(ts)$ into subsets corresponding to each possible argument in the $switch$, proving that finite parsers may be generated for each of these separately.
+
+  \item Whenever $F\!I\!RST(ts)$ includes $shi\!ft$ along with $reduce$, $delay$ or $resolve$ actions, it is necessary to reorder those traces using the equivalence rules.
+        Let $ts' = COLLATE(ts)$. If $F\!I\!RST(ts')$ still has $reduce$, $delay$ or $resolve$ actions then 
+        If, under these circumstances, $F\!I\!RST(COLLATE(ts))$ still contains any $reduce$, $delay$ or $resolve$ actions then the grammar is known to be ambiguous and cannot be parsed.
+\end{itemize}
+
+\subsubsection{LR(k) grammars.}
+
+Suppose that a grammar is known to be in the class $LR(k)$ for some $k$. This also implies that the grammar is unambiguous.
+
+For any $reduce$ action in traces of $G$ there are at most $k$ $shi\!ft$ actions that must be executed before we could resolve the $reduce$ action.
+Thus, for any trace or subtrace $ts$ in $traces(G)$, there are (TODO) possibilities:
+
+\begin{itemize}
+  \item $F\!I\!RST(ts) = \{ \alpha \}$, then a single action $\alpha$ can be used.
+  \item $F\!I\!RST(ts) = \{ shift(a), shift(b), shift(c), ... \}$, then a single action $switch$ can be used and each branch must be considered separately.
+  \item $F\!I\!RST(ts) = \{ reduce(A), reduce(B), ... \}$, then there are at most $k$ shift actions that are needed to disambiguate the grammar.
+        We will deal with this case separately.
+  \item There are $shift$ actions as well as $reduce$ actions in the $F\!I\!RST$ set.
+\end{itemize}
+
+The first case is trivial.
+For the second case our inductive proof must consider each branch separately.
+
+\subsubsection{...}
+
+%Take the traces of a grammar, $traces(G)$. We wish to know whether a finite parser can be constructed that generates all of the traces of $G$.
+%
+%Let $START(t, p)$ be the property that all non-empty traces in $t$ start with the pattern $p$. For example:
+%\begin{align*}
+%START(traces(G), shift(x)) \quad \Rightarrow \quad traces(G) = \{ & \langle \rangle, \langle shi\!ft(x), ... \rangle, \langle shi\!ft(x), ... \rangle, ... \} \\
+%START(traces(G), shift) \quad \Rightarrow \quad traces(G) = \{ & \langle \rangle, \langle shi\!ft(x), ... \rangle, \langle shi\!ft(a), ... \rangle, ... \} \\
+%START(traces(G), reduce(B)) \quad \Rightarrow \quad traces(G) = \{ & \langle \rangle, \langle reduce(B), ... \rangle, \langle reduce(B), ... \rangle, ... \}
+%\end{align*}
+%
+%Suppose we can find some $m$ such that $START(E(G,m), p)$ holds and $START(E(G,n), p) \rightarrow START(E(G,n+1), p)$ whenever $n \geq m$.
+%Since $E(G,n) \subseteq E(G, n+1)$ for all $n$ it is clear that $START(traces(G), p)$ will hold.
+%
+%If $START(traces(G), shift(t))$ holds for some terminal symbol $t$ then the first action of the parser must be $shift(t)$.
+%Otherwise, if $START(traces(G), shift)$ holds then the first action in the parser must be $switch(...)$.
+%
+%Similarly, if $START(traces(G), reduce(N))$ for some non-terminal $N$ then the first action must be $reduce(N)$.
+%However, if the weaker condition $START(traces(G), reduce)$ holds then there are three possibilities:
+%\begin{itemize}
+%  \item The grammar is ambiguous and cannot be parsed.
+%  \item The next parser action must be a $delay$ action followed later on by the corresponding $resolve$ action.
+%  \item $START(next(traces(G))$ is $shift(x)$ for some fixed $x$.
+%\end{itemize}
+
 
 
 \section{A prototype parser generator}
@@ -205,7 +278,7 @@ Practically this simply means that some termination condition must be supplied t
 
 Interestingly, testing whether it is possible to construct a parser of finite length is equivalent to proving termination for a parser generator that outputs the given parser.
 This fact corresponds with our earlier observation that the class of LD grammars is undecidable.
-Since proving termination is intractable in general, we must restrict ourselves to specific subclasses of the problem\footnote{Note that we can prove a grammar is in $LR(k)$ for some specific $k$ but not for any $k$.}.
+Since proving termination is intractable in general, we must restrict ourselves to specific subclasses of the problem\footnote{This is similar to proving that a grammar is in $LR(k)$ for some specific $k$ rather than for any $k$.}.
 
 %[todo: prove via induction: "if this unknown production can be resolved (which is not decidable), then this lookahead can be found. (or if A and B distinct? etc)"
 
