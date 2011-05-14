@@ -1,0 +1,365 @@
+\documentclass[envcountsame,runningheads]{llncs}
+\usepackage{pscproc2}
+%\usepackage{url}
+
+%\usepackage{tikz}
+%\usepackage{geometry}
+%\geometry{a4paper}
+%\usepackage{gcl}
+%\usepackage{float}
+%\usepackage{wrapfig}
+\usepackage{proof}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+\usepackage{amsmath}
+
+
+% This is the shorter version of the technical report on "Implementing delayed actions in left-to-right parsing of context-free grammars" for the Prague Stringology Conference
+\begin{document}
+\title{Left-to-right parsing with delayed derivation}
+\author{Rehno Lindeque \and Derrick Kourie}
+\institute{University of Pretoria\\
+\email{research@rehno.lindeque.name}}
+\maketitle
+
+\begin{abstract}
+In this paper we suggest the use of delayed actions for parsing context-free languages.
+The semantics of a domain specific language with the faculty of delayed reductions is described.
+Programs expressed in this DSL are capable of parsing an undecidable class of grammars larger than $LR(k)$ for any fixed $k$.
+A simple proof shows that such a parser will always perform in linear time with respect to the number of lexical tokens.
+Finally, a prototype for an automatic parser generator is described.
+\end{abstract}
+
+\begin{keywords}
+LD parser, recursive-ascent parser, context-free grammar, parser generator, bottom-up parser, top-down parser, delayed derivations
+\end{keywords}
+
+\section{Introduction}
+
+[todo]
+
+The remainder of this paper will be structured as follows. 
+The operational semantics for a small, domain specific instruction set is developed.
+[todo]
+
+%Previous methods have often looked at lookahead as an adhoc extension of the parsing mechanism.
+
+%In LD parsing lookahead is seen as a natural consequence extending from the notion of top-down versus bottom-up parsing strategies.
+% PERHAPS:  extending from the dual???? symmetric???? complimentary??? orthogonal??? notions of top-down versus bottom-up parsing strategies.
+%forms an explicit part of the domain specific language.
+%
+
+%Our approach combines top-down and bottom-up parsing strategies in a way that look-ahead naturally forms part of the parsing method rather than as a adhock extension.
+%...relaxes the coupling between the parser's recognition mechanism and its translation mechanism.
+%...first by recognizing a distinction between the parser's recognition mechanism and its translation mechanism and then properly/formally/naturally/thoroughly integrating lookahead into the recognition mechanism.
+
+%Other methods have attempted to combine top-down and bottom-up parsing strategies through left-corner parsing\cite{}. 
+%However, these take an ad-hoc approach, searching for ...., 
+%failing to fully consolidate the notion of lookahead with recognition.
+
+%For this reason we have managed to achieve an algorithmic improvement in time complexity over previous methods.
+
+%Unlike previous research in this area we have also turned to tools from programming language theory in order clarify the semantics of our approach,
+%leading to a simple, intuitive understanding of how the parser works. (amenable to formal analysis) (This has lead us to define a domain specific language...)
+
+\section{Delayed derivations}
+
+Our parsing strategy is divided into two passes.
+[todo]
+
+\subsection{Operational semantics}
+
+\begin{equation}
+\infer{i, j \mapsto i+1, j+1}{input_i = a & actions_j = shift(a)} \tag{shift}
+\end{equation}
+
+\begin{equation}
+\infer{parserstate \mapsto error}{input_i = a & actions_j = shift(b)} \tag{shift-error}
+\end{equation}
+
+\begin{equation}
+\infer{i, j, lasttarget, callstack_l, l \mapsto i+1, A_{input_i}, A_{input_i}, j+1, l+1}{input_i \in A & actions_j = switch(A)} \tag{switch}
+\end{equation}
+
+\begin{equation}
+\infer{parsestate \mapsto error}{input_i \notin A & actions_j = switch(A)} \tag{switch-error}
+\end{equation}
+
+\begin{equation}
+\infer{j, rulesbu\!f\!f\!er_k, k \mapsto j+1, r, k+1}{actions_j = reduce(r)} \tag{reduce}
+\end{equation}
+
+\begin{equation}
+\infer{delays_m, m, j, rulesbu\!f\!f\!er_k, k \mapsto k, m+1, j+1, ignore, k+1}{actions_j = delay} \tag{delay}
+\end{equation}
+
+\begin{equation}
+\infer{l, j, rulesbu\!f\!f\!er_{delays_{m-1}}, m \mapsto l-1, j+1, r, m-1}{actions_j = resolve(r)} \tag{resolve}
+\end{equation}
+
+\begin{equation}
+\infer{j, l \mapsto callstack_{l-1}, l-1}{actions_j = return} \tag{return}
+\end{equation}
+
+\begin{equation}
+\infer{j \mapsto A_{lasttarget}}{lasttarget \in A & actions_j = goto(A)} \tag{goto}
+\end{equation}
+
+\subsection{Trace semantics}
+
+In order to translate a given string into a concrete syntax tree an LR parser must perform a sequence of $shi\!ft$ and $reduce$ operations.
+For a given grammar $G$ we can mechanically generate a \emph{trace} of this sequence of operations on any string in the language $\boldsymbol{L}(G)$.
+Restricting the traces to $shi\!ft$ and $reduce$ operations in an LR parser allows us to study the desired semantics of the parser independent of its lookahead mechanism, an orthogonal concern.
+As most grammars of interest generate languages containing infinite sets of strings, the corresponding parsers will also generate an infinite set of traces, $traces(G)$.
+Clearly the set of traces that a concrete $LR(k)$ parser with fixed lookahead $k$ can generate is restricted in the same way that the set of strings it can translate is restricted.
+If we can construct an $LR(k)$ parser of finite length where $k$ is specified\footnote{The constraint that $k$ must be specified is important because finding such a $k$ automatically is undecidable in general.}
+then $G$ will fall in the class of $LR(k)$ grammars.
+It is not \emph{generally} possible to determine whether all the strings generated by a grammar can be parsed by a LD parser\footnote{In other words no algorithm exists to test whether a grammmar falls in a class of $LD$ grammars.}.
+None-the-less, we wish to show that it is indeed possible to construct LD parsers of finite length for a broad class of grammars that include all $LR(k)$ grammars for any fixed value of $k$.
+
+%If we can show that the set of traces a concrete LD parser will generate is equivalent to the set of traces generated by a theoretical LR parser then those parsers have the same strength.
+
+\subsubsection{Mechanically generating traces.}
+
+The \emph{shift-reduce traces} of a grammar can be enumerated without implementing a concrete parser.
+However, a naive algorithm may become `stuck' inside a subtrace and never explore all the branches of a grammar.
+
+Suppose that $\top_{G} \equiv traces(G)$, the---potentialy infinite---set of all possible of traces for the grammar and $\bot_{G} \equiv \{ \langle \rangle \}$ is the set containing the empty trace.
+Is there a function $E(G,n)$ such that the following relations will hold?
+\begin{equation*} \bot_{G} \sqsubseteq E(G, n) \sqsubseteq E(G, n+1) \sqsubseteq \top_{G} \end{equation*}
+and
+\begin{equation*} lim_{n \to \infty} E(G,n) = \top_{G} \end{equation*}
+
+Here $\sqsubseteq$ is defined as a total ordering on sets of traces such that
+\begin{equation*} A \sqsubset B \quad \iff \quad A \subset B\end{equation*}
+
+In order to generate a trace continuously explores the entire grammar our procedure will expand its traces in a breadth-first manner.
+Hence $E(g,n)$ is defined in terms of two other functions. $I(G,n)$ holds all of the \emph{incomplete} traces that are yet to be explored while $Generate$ produces a new set of \emph{completed} traces from these.
+\begin{eqnarray*}
+E(G, 0)   & \equiv & \{ \langle \rangle \} \\
+E(G, n+1) & \equiv & E(G, n) \cup Generate(I(G, n))
+\end{eqnarray*}
+
+For example, consider the following grammar.
+{\small\begin{align*}
+G \equiv \quad & A_1 \rightarrow a\\
+               & A_2 \rightarrow x A\\
+               & B_1 \rightarrow b\\
+               & B_2 \rightarrow x B\\
+               & S_1 \rightarrow A \$\\
+               & S_2 \rightarrow B \$
+\end{align*}}
+Note that every production rule has a \emph{rule number} subscript and $\$$ represents the \emph{end-of-stream} token.
+The procedure for expanding this grammar will yield the following outputs. 
+{\small\begin{align*}
+E(G, 0) = \{ & \langle \rangle \}\\
+I(G, 0) = \{ & \langle \mathbf{Expand(S_1)} \rangle,\\
+             & \langle \mathbf{Expand(S_2)} \rangle \}\\
+E(G, 1) = \{ & \langle \rangle \}\\
+I(G, 1) = \{ & \langle \mathbf{Expand(A_1)}, shift(\$), reduce(S_1) \rangle,\\
+             & \langle \mathbf{Expand(A_2)}, shift(\$), reduce(S_1) \rangle,\\
+             & \langle \mathbf{Expand(B_1)}, shift(\$), reduce(S_2) \rangle, \\
+             & \langle \mathbf{Expand(B_1)}, shift(\$), reduce(S_2) \rangle \}\\
+E(G, 2) = \{ & \langle \rangle, \\
+             & \langle shift(a), reduce(A_1), shift(\$), reduce(S_1) \rangle,\\
+             & \langle shift(b), reduce(B_1), shift(\$), reduce(S_2) \rangle \}\\
+I(G, 2) = \{ & \langle shift(x), \mathbf{Expand(A_1)}, reduce(B_2), shift(\$), reduce(S_1) \rangle,\\
+             & \langle shift(x), \mathbf{Expand(A_2)}, reduce(B_2), shift(\$), reduce(S_1) \rangle,\\
+             & \langle shift(x), \mathbf{Expand(B_1)}, reduce(B_2), shift(\$), reduce(S_2) \rangle,\\
+             & \langle shift(x), \mathbf{Expand(B_2)}, reduce(B_2), shift(\$), reduce(S_2) \rangle \}\\
+\textellipsis
+\end{align*}}
+
+\subsubsection{Incorporating lookahead actions.}
+
+Using the operational semantics defined before, we can extend the \emph{shift-reduce traces} delayed parsing actions.
+By showing that a trace with delayed actions is \emph{equivalent} to a shift-reduce trace, we can show that it parses the same grammar.
+Then all that remains is to show that an LD parser of finite length can be constructed to generate an equivalent trace.
+As traces may be infinite in length it is necessary to use inductive principles to construct a proof of equivalence.
+
+Because \emph{recognition} and \emph{translation} is decoupled in a LD parser any pair of adjacent $shi\!ft$ and $reduce$ actions may be swapped.
+Furthermore notice that the action $reduce(A)$ action can be split into a $delay$ action followed by $resolve(A)$.
+This results in the following \emph{equivalence rules}.
+
+\begin{align*}
+&\langle ..., reduce(A), shi\!ft(x), ... \rangle  &\iff&& \langle ..., shi\!ft(x), reduce(A), ... \rangle  \tag{eq-1}\\
+&\langle ..., reduce(A), ... \rangle              &\iff&& \langle ..., delay, resolve(A), ... \rangle      \tag{eq-2}\\
+&\langle ..., resolve(A), shi\!ft(x), ... \rangle &\iff&& \langle ..., shi\!ft(x), resolve(A), ... \rangle \tag{eq-3}\\
+&\langle ..., delay, shi\!ft(x), ... \rangle      &\iff&& \langle ..., shi\!ft(x), delay, ... \rangle      \tag{eq-4}
+\end{align*}
+
+Take note that control flow instructions such as $switch$, $goto$ and $return$ are not included.
+Specifically, $switch$ instructions conceptually generate $shi\!ft$ actions in the traces.
+
+\subsubsection{Proof method.}
+
+Let $F\!I\!RST(ts)$ be the function that takes a set of traces $ts$ and returns the set that contains the first action of every non-empty trace.
+Let $FOLLOW(ts)$ be the function that returns the remainder of the $ts$ traces having their first actions removed.
+
+Suppose that we can find some $m$ such that $F\!I\!RST(E(G,m)) = \alpha$ and $F\!I\!RST(E(G,n)) = \alpha \Rightarrow FIRST(E(G,n+1)) = \alpha$ whenever $n \geq m$.
+Then $F\!I\!RST(traces(G)) = \alpha$ must hold, since $E(G,n) \subseteq E(G, n+1)$.
+
+It is also possible to use our equivalence rules with the traces. 
+Let $SW\!AP(t)$ be the function that swaps the first action of trace $t$ with the next action in the trace.
+The $SW\!AP$ function is only permissible when $SW\!AP(t)$ would remain equivalent to $t$ according to rules eq-1,3,4.
+Furthermore, when $t$ is empty or has only one action then $SW\!AP(t)$ is also undefined.
+
+$COLLATE(ts)$ will be the function on traces such that $SW\!AP$ is applied to each trace where eq-1,3,4 holds for the first two actions. \\
+
+Now let us consider the different ways in which we could prove that a LD parser would be finite.
+\begin{itemize}
+  \item Suppose that $F\!I\!RST(ts)$ is a set of only one action $\alpha$. 
+        Then it is clear that a finite parser can be used to generate that action in all of the non-empty traces\footnote{Empty traces may be ignored since all traces must end with a reduce action for one of the starting nonterminals.} in $ts$.
+        Once a single action has been identified for $F\!I\!RST(ts)$ then a finite parser could be constructed for the corresponding grammar if and only if a finite parser can be constructed for the remainder of the traces, $FOLLOW(ts)$.
+
+  \item Alternatively, if $F\!I\!RST(ts)$ consists of multiple $shi\!ft$ actions with different arguments\footnote{E.g. $\{\langle shi\!ft(x), ... \rangle, \langle shi\!ft(a), ... \rangle, ... \}$} then 
+        a single $switch$ action could be output. Then the task is to divide $FOLLOW(ts)$ into subsets corresponding to each possible argument in the $switch$, proving that finite parsers may be generated for each of these separately.
+
+  \item Whenever $F\!I\!RST(ts)$ includes $shi\!ft$ along with $reduce$, $delay$ or $resolve$ actions, it is necessary to reorder those traces using the equivalence rules.
+        Let $ts' = COLLATE(ts)$. If $F\!I\!RST(ts')$ still has $reduce$, $delay$ or $resolve$ actions then 
+        If, under these circumstances, $F\!I\!RST(COLLATE(ts))$ still contains any $reduce$, $delay$ or $resolve$ actions then the grammar is known to be ambiguous and cannot be parsed.
+\end{itemize}
+
+\subsubsection{LR(k) grammars.}
+
+Suppose that a grammar is known to be in the class $LR(k)$ for some $k$. This also implies that the grammar is unambiguous.
+
+For any $reduce$ action in traces of $G$ there are at most $k$ $shi\!ft$ actions that must be executed before we could resolve the $reduce$ action.
+Thus, for any trace or subtrace $ts$ in $traces(G)$, there are (TODO) possibilities:
+
+\begin{itemize}
+  \item $F\!I\!RST(ts) = \{ \alpha \}$, then a single action $\alpha$ can be used.
+  \item $F\!I\!RST(ts) = \{ shift(a), shift(b), shift(c), ... \}$, then a single action $switch$ can be used and each branch must be considered separately.
+  \item $F\!I\!RST(ts) = \{ reduce(A), reduce(B), ... \}$, then there are at most $k$ shift actions that are needed to disambiguate the grammar.
+        We will deal with this case separately.
+  \item There are $shift$ actions as well as $reduce$ actions in the $F\!I\!RST$ set.
+\end{itemize}
+
+The first case is trivial.
+For the second case our inductive proof must consider each branch separately.
+
+\subsubsection{...}
+
+%Take the traces of a grammar, $traces(G)$. We wish to know whether a finite parser can be constructed that generates all of the traces of $G$.
+%
+%Let $START(t, p)$ be the property that all non-empty traces in $t$ start with the pattern $p$. For example:
+%\begin{align*}
+%START(traces(G), shift(x)) \quad \Rightarrow \quad traces(G) = \{ & \langle \rangle, \langle shi\!ft(x), ... \rangle, \langle shi\!ft(x), ... \rangle, ... \} \\
+%START(traces(G), shift) \quad \Rightarrow \quad traces(G) = \{ & \langle \rangle, \langle shi\!ft(x), ... \rangle, \langle shi\!ft(a), ... \rangle, ... \} \\
+%START(traces(G), reduce(B)) \quad \Rightarrow \quad traces(G) = \{ & \langle \rangle, \langle reduce(B), ... \rangle, \langle reduce(B), ... \rangle, ... \}
+%\end{align*}
+%
+%Suppose we can find some $m$ such that $START(E(G,m), p)$ holds and $START(E(G,n), p) \rightarrow START(E(G,n+1), p)$ whenever $n \geq m$.
+%Since $E(G,n) \subseteq E(G, n+1)$ for all $n$ it is clear that $START(traces(G), p)$ will hold.
+%
+%If $START(traces(G), shift(t))$ holds for some terminal symbol $t$ then the first action of the parser must be $shift(t)$.
+%Otherwise, if $START(traces(G), shift)$ holds then the first action in the parser must be $switch(...)$.
+%
+%Similarly, if $START(traces(G), reduce(N))$ for some non-terminal $N$ then the first action must be $reduce(N)$.
+%However, if the weaker condition $START(traces(G), reduce)$ holds then there are three possibilities:
+%\begin{itemize}
+%  \item The grammar is ambiguous and cannot be parsed.
+%  \item The next parser action must be a $delay$ action followed later on by the corresponding $resolve$ action.
+%  \item $START(next(traces(G))$ is $shift(x)$ for some fixed $x$.
+%\end{itemize}
+
+
+
+\section{A prototype parser generator}
+
+As it is not possible to determine whether a grammar will fall in a class of $LD$ grammars,
+there is no way of implementing a parser generator that will report any invalid grammar.
+However, we do have an intuitive notion of what a practical parser should look like.
+Instead of arbitrarily restricting the lookahead that a parser can handle\footnote{...as is the case with $LR(k)$ parsers.},
+we simply restrict the complexity of the generated parser.
+Practically this simply means that some termination condition must be supplied to the parser generator such as an upper bound on the size of the parser.
+
+\section{Results}
+
+Interestingly, testing whether it is possible to construct a parser of finite length is equivalent to proving termination for a parser generator that outputs the given parser.
+This fact corresponds with our earlier observation that the class of LD grammars is undecidable.
+Since proving termination is intractable in general, we must restrict ourselves to specific subclasses of the problem\footnote{This is similar to proving that a grammar is in $LR(k)$ for some specific $k$ rather than for any $k$.}.
+
+%[todo: prove via induction: "if this unknown production can be resolved (which is not decidable), then this lookahead can be found. (or if A and B distinct? etc)"
+
+%Unfortunately full proofs of the following subclasses is outside the scope of this paper.
+By mechanically generating traces for the following example grammars we are able to show several unambiguous forms that can be parsed successfully and one counter example that cannot.
+
+\begin{tabular}{|l|c|c|c|c|c|c|}
+  \hline
+  Example         & Class         & Lookahead      & LR(0) & LR(k) & LD  & GLR/Earley \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow a\\
+  & B_1 \rightarrow b\\
+  & S_1 \rightarrow A \$\\
+  & S_2 \rightarrow B \$
+  \end{aligned}$} & LR(0)         & none           & yes   & yes   & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & S_1 \rightarrow A a \$\\
+  & S_2 \rightarrow B b \$
+  \end{aligned}$} & LR(k)         & fixed          & no    & yes   & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & A_2 \rightarrow x A\\
+  & B_1 \rightarrow x\\
+  & B_2 \rightarrow B x\\
+  & S_1 \rightarrow A a \$\\
+  & S_2 \rightarrow B b \$
+  \end{aligned}$}  & Unambiguous  & outside cycle  & no    & no    & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & C_1 \rightarrow y\\
+  & C_2 \rightarrow C y\\
+  & S_1 \rightarrow A C a \$\\
+  & S_2 \rightarrow B C b \$
+  \end{aligned}$}  & Unambiguous  & contains cycle & no    & no    & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & C_1 \rightarrow a\\
+  & C_2 \rightarrow y C\\
+  & D_1 \rightarrow b\\
+  & D_2 \rightarrow y D\\
+  & S_1 \rightarrow A C \$\\
+  & S_2 \rightarrow B D \$
+  \end{aligned}$}  & Unambiguous  & inside cycle   & no    & no    & yes & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & A_2 \rightarrow A C \\
+  & B_1 \rightarrow x\\
+  & B_2 \rightarrow B D\\
+  & C_1 \rightarrow y\\
+  & C_2 \rightarrow y C\\
+  & D_1 \rightarrow y\\
+  & D_2 \rightarrow y D\\
+  & S_1 \rightarrow A a \$\\
+  & S_2 \rightarrow B b \$
+  \end{aligned}$}  & Unambiguous  & outside nested cycles & no & no & no & yes \\ \hline
+  {\small $\begin{aligned}
+  & A_1 \rightarrow x\\
+  & B_1 \rightarrow x\\
+  & S_1 \rightarrow A \$\\
+  & S_2 \rightarrow B \$
+  \end{aligned}$}  & Ambiguous    & none            & no    & no    & no & yes \\ \hline
+\end{tabular}
+
+
+\section{Conclusions}
+An earlier unpublished report describing additional details of the parsing DSL and parser generator can be found in \cite{Lin11}.
+
+%The one disadvantage of this approach is that an entire file must be loaded... (but virtual memory and manual sectioning can offset this disadvantage)
+
+\section{Future work}
+
+It remains to develop generalized LD parsers for all context-free grammars, including those with ambiguities. 
+Such GLD parsers would be equivalent in strength to GLR parsers, however it is hoped that such
+a development would result in superior performance and simpler implementations.
+
+\bibliographystyle{psc}
+\bibliography{ldparsing}
+
+\end{document}
+
