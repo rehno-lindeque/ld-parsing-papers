@@ -106,52 +106,61 @@ to allow the parser to disambiguate it.
 Thus, the lookahead mechanism of the parser is integrated into the standard recognition mechanism.
 Because derivations may be delayed, it is possible to recognize production rules in a top-down manner or even resolve nonterminals to the right of a 
 production rule before those to the left have been resolved.
-For this reason we classify our technique as neither LR nor LL parsing.
+For this reason we do not classify our technique as either LR or LL parsing.
 
 \subsection{Operational semantics}
 
-A LD parser may be be constructed from a combination of the operations listed below.
+A LD parser may be constructed using a combination of the operations listed below.
 Together these operations form an instruction set for a domain specific parsing language.
 
 \begin{equation}
-\infer{i, j \mapsto i+1, j+1}{input_i = a & actions_j = shift(a)} \tag{shift}
+\infer{i, j \mapsto i+1, j+1}{input_i = a & ops_j = shift(a)} \tag{shift}
 \end{equation}
 
 \begin{equation}
-\infer{parserstate \mapsto error}{input_i = a & actions_j = shift(b)} \tag{shift-error}
+\infer{parserstate \mapsto error}{input_i = a & ops_j = shift(b)} \tag{shift-error}
 \end{equation}
 
 \begin{equation}
-\infer{i, j, lasttarget, callstack_l, l \mapsto i+1, A_{input_i}, A_{input_i}, j+1, l+1}{input_i \in A & actions_j = switch(A)} \tag{switch}
+\infer{i, j, lasttarget, callstack_l, l \mapsto i+1, A_{input_i}, A_{input_i}, j+1, l+1}{input_i \in A & ops_j = switch(A)} \tag{switch}
 \end{equation}
 
 \begin{equation}
-\infer{parsestate \mapsto error}{input_i \notin A & actions_j = switch(A)} \tag{switch-error}
+\infer{parsestate \mapsto error}{input_i \notin A & ops_j = switch(A)} \tag{switch-error}
 \end{equation}
 
 \begin{equation}
-\infer{j, rulesbu\!f\!f\!er_k, k \mapsto j+1, r, k+1}{actions_j = reduce(r)} \tag{reduce}
+\infer{j, rulesbu\!f\!f\!er_k, k \mapsto j+1, r, k+1}{ops_j = reduce(r)} \tag{reduce}
 \end{equation}
 
 \begin{equation}
-\infer{delays_m, m, j, rulesbu\!f\!f\!er_k, k \mapsto k, m+1, j+1, ignore, k+1}{actions_j = delay} \tag{delay}
+\infer{delays_m, m, j, rulesbu\!f\!f\!er_k, k \mapsto k, m+1, j+1, ignore, k+1}{ops_j = delay} \tag{delay}
 \end{equation}
 
 \begin{equation}
-\infer{l, j, rulesbu\!f\!f\!er_{delays_{m-1}}, m \mapsto l-1, j+1, r, m-1}{actions_j = resolve(r)} \tag{resolve}
+\infer{l, j, rulesbu\!f\!f\!er_{delays_{m-1}}, m \mapsto l-1, j+1, r, m-1}{ops_j = resolve(r)} \tag{resolve}
 \end{equation}
 
 \begin{equation}
-\infer{j, l \mapsto callstack_{l-1}, l-1}{actions_j = return} \tag{return}
+\infer{j, l \mapsto callstack_{l-1}, l-1}{ops_j = return} \tag{return}
 \end{equation}
 
 \begin{equation}
-\infer{j \mapsto A_{lasttarget}}{lasttarget \in A & actions_j = goto(A)} \tag{goto}
+\infer{j \mapsto A_{lasttarget}}{lasttarget \in A & ops_j = goto(A)} \tag{goto}
 \end{equation}
 
 These instructions manipulate a global state consisting of the following variables and data structures.
 
-[todo]
+{\small\begin{align*}
+input & \quad \text{Array of lexical tokens}\\
+i     & \quad \text{Index into the parser input stream} input_i\\
+ops   & \quad \text{Sequence of parsing instructions (the parser}\\
+      & \quad \text{definition)}\\
+j     & \quad \text{Index into the parser instruction stream $ops_j$}\\
+rulesbu\!f\!f\!er & \quad \text{Dynamically growing array of production rules}\\
+k     & \quad \text{Index pointing to the first unassigned cell in the}\\
+      & \quad \text{rules buffer $rulesbu\!f\!f\!er_k$}
+\end{align*}}
 
 \subsection{Trace semantics}
 
