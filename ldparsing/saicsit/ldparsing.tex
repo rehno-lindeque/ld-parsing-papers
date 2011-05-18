@@ -115,19 +115,19 @@ Together these operations form an instruction set for a domain specific parsing 
 
 %{\small
 \begin{equation}
-\infer{i, j \mapsto i+1, j+1}{input_i = a & ops_j = shift(a)} \tag{shift}
+\infer{i, j \mapsto i+1, j+1}{ops_j = shift(a) & input_i = a} \tag{shift}
 \end{equation}
 
 \begin{equation}
-\infer{parserstate \mapsto error}{input_i = a & ops_j = shift(b)} \tag{shift-error}
+\infer{parserstate \mapsto error}{ops_j = shift(a) & input_i = b} \tag{shift-error}
 \end{equation}
 
 \begin{equation}
-\infer{i, j, lasttarget, callstack_l, l \mapsto i+1, A_{input_i}, A_{input_i}, j+1, l+1}{input_i \in A & ops_j = switch(A)} \tag{switch}
+\infer{i, j, n, cs_l, l \mapsto i+1, A_{input_i}, A_{input_i}, j+1, l+1}{ops_j = switch(A) & input_i \in A} \tag{switch}
 \end{equation}
 
 \begin{equation}
-\infer{parsestate \mapsto error}{input_i \notin A & ops_j = switch(A)} \tag{switch-error}
+\infer{parsestate \mapsto error}{ops_j = switch(A) & input_i \notin A} \tag{switch-error}
 \end{equation}
 
 \begin{equation}
@@ -143,11 +143,11 @@ Together these operations form an instruction set for a domain specific parsing 
 \end{equation}
 
 \begin{equation}
-\infer{j, l \mapsto callstack_{l-1}, l-1}{ops_j = return} \tag{return}
+\infer{j, l \mapsto cs_{l-1}, l-1}{ops_j = return} \tag{return}
 \end{equation}
 
 \begin{equation}
-\infer{j \mapsto A_{lasttarget}}{lasttarget \in A & ops_j = goto(A)} \tag{goto}
+\infer{j \mapsto A_{n}}{n \in A & ops_j = goto(A)} \tag{goto}
 \end{equation}
 %}
 
@@ -155,16 +155,23 @@ These instructions manipulate a global state consisting of the following variabl
 \begin{center}
 {\small
 \renewcommand{\tabcolsep}{5pt}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{r p{7cm} l}
-$input$ & Array of lexical tokens\\
-$i$     & Index into the parser input stream $input_i$\\
-$ops$   & Sequence of parsing instructions (the parser definition)\\
-$j$     & Index into the parser instruction stream $ops_j$\\
-$rules$ & Dynamically growing array of production rules\\
-$k$     & Index pointing to the first unassigned cell in the rules buffer $rules_k$
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{r p{6cm} l}
+$input$  & Array of lexical tokens\\
+$i$      & Index into the parser input stream $input_i$\\
+$ops$    & Sequence of parsing instructions (the parser program)\\
+$j$      & Index into the parser instruction stream $ops_j$\\
+$rules$  & Dynamically growing array\footnotemark\;of production rules\\
+$k$      & Index pointing to the first empty cell in the rules buffer $rules_k$\\
+$cs$     & Dynamically growing/shrinking call stack\\
+$l$      & Index pointing to the first empty cell in the call stack $cs_l$\\
+$delays$ & Dynamically growing/shrinking stack of indexes into the $rules$ buffer\\
+$m$      & Index pointing to the first empty cell in $delays$\\
+$n$      & Last index into the instruction stream, recorded by a $switch$ operation
 \end{tabular}}
+\footnotetext{This array does provide random access despite growing in a stack-like manner.}
 \end{center}
+In addition, $error$ is a special error state which (in the absence of error recovery) will halt the parser and report a syntax error.
 
 \subsection{Trace semantics}
 
