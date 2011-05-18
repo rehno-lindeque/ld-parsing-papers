@@ -262,10 +262,15 @@ Specifically, $switch$ instructions conceptually generate $shi\!ft$ actions in t
 \subsubsection{Proof method.}
 
 Let $F\!I\!RST(ts)$ be the function that takes a set of traces $ts$ and returns the set that contains the first action of every non-empty trace.
-Let $FOLLOW(ts)$ be the function that returns the remainder of the $ts$ traces having their first actions removed.
+Let $FOLLOW(ts)$ be the function that returns the remainder of the $ts$ traces having their first actions removed.\\
 
-Suppose that we can find some $m$ such that $F\!I\!RST(E(G,m)) = \alpha$ and $F\!I\!RST(E(G,n)) = \alpha \Rightarrow FIRST(E(G,n+1)) = \alpha$ whenever $n \geq m$.
-Then $F\!I\!RST(traces(G)) = \alpha$ must hold, since $E(G,n) \subseteq E(G, n+1)$.
+Suppose that we can find some $m$ such that 
+\[F\!I\!RST(E(G,m)) = \alpha\]
+and
+\[F\!I\!RST(E(G,n)) = \alpha \Rightarrow FIRST(E(G,n+1)) = \alpha\]
+whenever $n \geq m$.\\
+
+Then $F\!I\!RST(traces(G)) = \alpha$ must hold since\\$E(G,n) \subseteq E(G, n+1)$.\\
 
 It is also possible to use our equivalence rules with the traces. 
 Let $SW\!AP(t)$ be the function that swaps the first action of trace $t$ with the next action in the trace.
