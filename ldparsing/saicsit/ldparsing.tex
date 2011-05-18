@@ -166,7 +166,7 @@ $k$      & Index pointing to the first empty cell in the rules buffer $rules_k$\
 $cs$     & Dynamically growing/shrinking call stack\\
 $l$      & Index pointing to the first empty cell in the call stack $cs_l$\\
 $delays$ & Dynamically growing/shrinking stack of indexes into the $rules$ buffer\\
-$m$      & Index pointing to the first empty cell in $delays$\\
+$m$      & Index pointing to the first empty cell in the stack of delayed rule indices, $delays_m$\\
 $n$      & Last index into the instruction stream, recorded by a $switch$ operation
 \end{tabular}}
 \footnotetext{This array does provide random access despite growing in a stack-like manner.}
@@ -248,13 +248,13 @@ As traces may be infinite in length it is necessary to use inductive principles 
 Because \emph{recognition} and \emph{translation} is decoupled in a LD parser any pair of adjacent $shi\!ft$ and $reduce$ actions may be swapped.
 Furthermore notice that the action $reduce(A)$ action can be split into a $delay$ action followed by $resolve(A)$.
 This results in the following \emph{equivalence rules}.
-
+{\small
 \begin{align*}
-&\langle ..., reduce(A), shi\!ft(x), ... \rangle  &\iff&& \langle ..., shi\!ft(x), reduce(A), ... \rangle  \tag{eq-1}\\
-&\langle ..., reduce(A), ... \rangle              &\iff&& \langle ..., delay, resolve(A), ... \rangle      \tag{eq-2}\\
-&\langle ..., resolve(A), shi\!ft(x), ... \rangle &\iff&& \langle ..., shi\!ft(x), resolve(A), ... \rangle \tag{eq-3}\\
-&\langle ..., delay, shi\!ft(x), ... \rangle      &\iff&& \langle ..., shi\!ft(x), delay, ... \rangle      \tag{eq-4}
-\end{align*}
+&\langle ..., reduce(A), shi\!ft(x), ... \rangle  &\hspace{-1em}\iff&& \hspace{-1em}\langle ..., shi\!ft(x), reduce(A), ... \rangle  \tag{eq-1}\\
+&\langle ..., reduce(A), ... \rangle              &\hspace{-1em}\iff&& \hspace{-1em}\langle ..., delay, resolve(A), ... \rangle      \tag{eq-2}\\
+&\langle ..., resolve(A), shi\!ft(x), ... \rangle &\hspace{-1em}\iff&& \hspace{-1em}\langle ..., shi\!ft(x), resolve(A), ... \rangle \tag{eq-3}\\
+&\langle ..., delay, shi\!ft(x), ... \rangle      &\hspace{-1em}\iff&& \hspace{-1em}\langle ..., shi\!ft(x), delay, ... \rangle      \tag{eq-4}
+\end{align*}}
 
 Take note that control flow instructions such as $switch$, $goto$ and $return$ are not included.
 Specifically, $switch$ instructions conceptually generate $shi\!ft$ actions in the traces.
